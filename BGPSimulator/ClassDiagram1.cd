@@ -1,0 +1,137 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="BGPSimulator.BGP.BGPErrorHandling" Collapsed="true">
+    <Position X="11.25" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>BGP\BGPErrorHandling.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BGPSimulator.BGP.BGPListner" Collapsed="true">
+    <Position X="0.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AoAACgQAAAAAAEGgAEAAAAgAQAAQQAQAAAAAAgAAAAA=</HashCode>
+      <FileName>BGP\BGPListner.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BGPSimulator.BGP.BGPSpeaker" Collapsed="true">
+    <Position X="2.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AoAACAEAAAAAAACAQEAAAIgAAAACAQAAAABAgAAAACE=</HashCode>
+      <FileName>BGP\BGPSpeaker.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BGPSimulator.BGP.CloseRouter" Collapsed="true">
+    <Position X="9.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAAAAAAAAAgAAgQAgAAgAAAAAgACAAABEEAAAEQAA=</HashCode>
+      <FileName>BGP\CloseRouter.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BGPSimulator.BGP.GlobalVariables" Collapsed="true">
+    <Position X="11.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ZAAqBQAAQIiFEVAERAIIAACgQEEANBAMAAxQUEEABAg=</HashCode>
+      <FileName>BGP\GlobalVariables.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BGPSimulator.BGP.InitilizeBGPListnerSpeaker" Collapsed="true">
+    <Position X="9.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAAAAAAAAAAAAEAAABQIAAAAAAAAAEgAAAAAABGA=</HashCode>
+      <FileName>BGP\InitilizeBGPListnerSpeaker.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BGPSimulator.BGP.PacketHandler" Collapsed="true">
+    <Position X="11.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAA=</HashCode>
+      <FileName>BGP\PacketHandler.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BGPSimulator.BGP.PathAttributes" Collapsed="true">
+    <Position X="9.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>BGP\PathAttributes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BGPSimulator.BGP.Router" Collapsed="true">
+    <Position X="1.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAAgAABAAAEAAABAAAAAAIAAAABAAAAAAAAAAAA=</HashCode>
+      <FileName>BGP\Router.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BGPSimulator.BGP.Routes" Collapsed="true">
+    <Position X="9.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CEAAAAAACAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>BGP\Routes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BGPSimulator.BGPMessage.KeepAliveMessage" Collapsed="true">
+    <Position X="0.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>BGPMessage\KeepAliveMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BGPSimulator.BGPMessage.MessageStructure" Collapsed="true">
+    <Position X="4" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ghABQAAgEEgCGgABAAABhGAAAICQAAIAgQAAAEAAsAA=</HashCode>
+      <FileName>BGPMessage\MessageStructure.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BGPSimulator.BGPMessage.NotificationMessage" Collapsed="true">
+    <Position X="3" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAFAAABAAAAAQAAEAAAAAAAAgAABAAAQAAAAAAAAA=</HashCode>
+      <FileName>BGPMessage\NotificationMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BGPSimulator.BGPMessage.OpenMessage" Collapsed="true">
+    <Position X="5.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IAAAAAAAAAAAIAwAAAAACgAAQAAEDAAAAQAAAAAIAAA=</HashCode>
+      <FileName>BGPMessage\OpenMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BGPSimulator.BGPMessage.UpdateMessage" Collapsed="true">
+    <Position X="7.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>wCAAAQwBAAEHAowIOQAAAAgEAAICwACEIQAGEAAYBAA=</HashCode>
+      <FileName>BGPMessage\UpdateMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BGPSimulator.FSM.FinateStateMachine" Collapsed="true">
+    <Position X="5.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gIQBGEIBWIAQQGAACAQIwkligCCFZBAECCglFAiGMAU=</HashCode>
+      <FileName>FSM\FinateStateMachine.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BGPSimulator.FSM.StateMachine" Collapsed="true">
+    <Position X="5.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>JIAA5IAQAgrQAUAQgAAAQDAGAErUAwAUWBgAQhIMggg=</HashCode>
+      <FileName>FSM\StateMachine.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BGPSimulator.FSM.UpdateMessageHandling" Collapsed="true">
+    <Position X="9.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAABQAAABAAAAAAAAAAAAAAQAAAAAAABAAAAACAAgA=</HashCode>
+      <FileName>FSM\UpdateMessageHandling.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BGPSimulator.Program" Collapsed="true">
+    <Position X="11.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAA=</HashCode>
+      <FileName>Program.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

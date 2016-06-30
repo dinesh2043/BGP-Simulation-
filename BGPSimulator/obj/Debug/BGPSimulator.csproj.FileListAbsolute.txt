@@ -1,0 +1,6 @@
+D:\DocumentsUTU\BGPSimulator\BGPSimulator\bin\Debug\BGPSimulator.exe.config
+D:\DocumentsUTU\BGPSimulator\BGPSimulator\bin\Debug\BGPSimulator.exe
+D:\DocumentsUTU\BGPSimulator\BGPSimulator\bin\Debug\BGPSimulator.pdb
+D:\DocumentsUTU\BGPSimulator\BGPSimulator\obj\Debug\BGPSimulator.exe
+D:\DocumentsUTU\BGPSimulator\BGPSimulator\obj\Debug\BGPSimulator.pdb
+D:\DocumentsUTU\BGPSimulator\BGPSimulator\obj\Debug\BGPSimulator.csprojResolveAssemblyReference.cache
