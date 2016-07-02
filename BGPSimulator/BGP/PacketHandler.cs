@@ -38,7 +38,7 @@ namespace BGPSimulator.BGP
                     string bgpIdentifier = Encoding.UTF8.GetString(packet, 46, 10);
                     ushort optimalParaLength = BitConverter.ToUInt16(packet, 56);
 
-                     Console.Write(" Length: {0} | Type: {1} | Version: {2} | AS: {3} | HoldTime in Sec: {4} | BGPIdentifier: {5} | OptimalParaLenth: {6} ",
+                     Console.Write(" Length: {0} | Type: {1} | Version: {2} | AS: {3} | HoldTime in Min: {4} | BGPIdentifier: {5} | OptimalParaLenth: {6} ",
                      packetLength, packetType, bgpVersion, autoSystem, holdTime, bgpIdentifier, optimalParaLength);
                     //Console.Write("OPEN MESSAGE");
                     Console.WriteLine(" from Router : " + IPAddress.Parse(((IPEndPoint)clientSocket.RemoteEndPoint).Address.ToString())+"\n");
