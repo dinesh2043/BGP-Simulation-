@@ -48,6 +48,7 @@ namespace BGPSimulator.BGP
         public static string listnerIpAddress;
         public static int conCountSpeaker;
         public static int currentSpeakerCount;
+        public static int i;
        
         //connectCount and Listner
         //ConcurrentDictionary is used for the thread safty
@@ -60,6 +61,7 @@ namespace BGPSimulator.BGP
         public static ConcurrentDictionary<ushort, ushort> listnerConAnd_AS = new ConcurrentDictionary<ushort, ushort>();
         public static ConcurrentDictionary<int, Socket> listnerSocket_Dictionary = new ConcurrentDictionary<int, Socket>();
         public static ConcurrentDictionary<int, Socket> SpeakerSocket_Dictionary = new ConcurrentDictionary<int, Socket>();
+        public static bool[] sucessfulConnection = new bool[14];
 
         //UPDATE Variables
         public static Dictionary<int, Tuple<string, ushort, string, ushort>> conSpeakerAs_ListnerAs = new Dictionary<int, Tuple<string, ushort, string, ushort>>();

@@ -19,6 +19,8 @@ namespace BGPSimulator
         {
             
             Console.WriteLine("Run the BGP simulator");
+            Thread.Sleep(1000);
+
             //InitilizeBGPListnerSpeaker init_BGP = new InitilizeBGPListnerSpeaker();
             //init_BGP.StartListner();
             FinateStateMachine FSM_Server = new FinateStateMachine();
@@ -44,7 +46,16 @@ namespace BGPSimulator
                 string line = Console.ReadLine(); // Get string from user
                 if (line == "help") // Check string
                 {
+                    Console.WriteLine(" First Type 'update' to enforce local policy" );
                     Console.WriteLine("Type 'as1' or 'as2' or 'as3' to see routing table info" );
+                    Console.WriteLine("Type 'updateAS1' to update AS1");
+                    Console.WriteLine("Type 'updateAS2' to update AS2");
+                    Console.WriteLine("Type 'updateAS3' to update AS3");
+                    Console.WriteLine("Type '127.1.0.0' to close router 0 ");
+                    Console.WriteLine("Type '127.2.0.5' to close router 5 ");
+                    Console.WriteLine("Type '127.3.0.9' to close router 9 ");
+
+
                     //break;
                 }
                 if (line == "as1")
@@ -89,9 +100,18 @@ namespace BGPSimulator
                 
                 if(line == "127.1.0.0")
                 {
-                    close.CloseSpeakerListner(line);
+                    close.CloseSpeakerListner(line, 1,1);
+                }
+                if (line == "127.2.0.5")
+                {
+                    close.CloseSpeakerListner(line, 3, 2);
+                }
+                if (line == "127.3.0.9")
+                {
+                    close.CloseSpeakerListner(line, 4,3);
                 }
                 
+
                 //Console.Write("You typed "); // Report output
                 //Console.Write(line.Length);
                 //Console.WriteLine(" character(s)");

@@ -138,9 +138,9 @@ namespace BGPSimulator.FSM
         bool bgpKeepAliveMessage;
         bool bgpUpdateMessage;
         bool bgpUpdateMsgError;
-        
 
- 
+        private static AutoResetEvent connectionType = new AutoResetEvent(true);
+
 
         InitilizeBGPListnerSpeaker init_BGP = new InitilizeBGPListnerSpeaker();
        
@@ -258,6 +258,8 @@ namespace BGPSimulator.FSM
 
                 //Console.WriteLine("Speaker AS "+GlobalVariables.speaker_AS[GlobalVariables.speakerIpAddress]);
                 //Console.WriteLine("AS check listner  " + GlobalVariables.listner_AS[GlobalVariables.listnerIpAddress]);
+
+                connectionType.WaitOne();
                 
                 if (GlobalVariables.speaker_AS[GlobalVariables.speakerIpAddress] == GlobalVariables.listner_AS[GlobalVariables.listnerIpAddress])
                 {
@@ -269,7 +271,7 @@ namespace BGPSimulator.FSM
                     GlobalVariables.connectionStatus = "External Connection";
                     Console.WriteLine("!! With :" + GlobalVariables.connectionStatus);
                 }
-                
+                connectionType.Set();
                 
             }
             if (tcpConnectionFail == true)
@@ -1245,8 +1247,12 @@ namespace BGPSimulator.FSM
                 connectionRetryFlag = false;
             }
             // Create a timer with a two 120000 interval.
-            //SM.connectRetryTimer = new System.Timers.Timer(120000);
-            connectRetryTimer = new System.Timers.Timer(120000);
+
+            //connectRetryTimer = new System.Timers.Timer(120000);
+
+            //this time is for only test purpose
+            connectRetryTimer = new System.Timers.Timer(420000);
+
 
             connectionRetryFlag = true;
             // Hook up the Elapsed event for the timer. 
@@ -1267,8 +1273,11 @@ namespace BGPSimulator.FSM
 
                 holdTimerFlag = false;
             }
-            //SM.holdTimer = new System.Timers.Timer(240000);
-            holdTimer = new System.Timers.Timer(240000);
+
+            //holdTimer = new System.Timers.Timer(240000);
+
+            //this time is for only test purpose
+            holdTimer = new System.Timers.Timer(540000);
 
             holdTimerFlag = true;
             holdTimer.Elapsed += OnHoldTimerExpire;
@@ -1288,8 +1297,11 @@ namespace BGPSimulator.FSM
 
                 keepAliveTimerFlag = false;
             }
-            //SM.keepaliveTimer = new System.Timers.Timer(80000);
-            keepaliveTimer = new System.Timers.Timer(80000);
+
+            //keepaliveTimer = new System.Timers.Timer(80000);
+
+            //this time is for only test purpose
+            keepaliveTimer = new System.Timers.Timer(400000);
 
             keepAliveTimerFlag = true;
             keepaliveTimer.Elapsed += OnkeepaliveTimerExpire;

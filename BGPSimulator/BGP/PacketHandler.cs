@@ -9,15 +9,18 @@ namespace BGPSimulator.BGP
 {
     public static class PacketHandler
     {
-       
-        
+
+        private static AutoResetEvent completePacket = new AutoResetEvent(true);
         public static void Handle(byte [] packet, Socket clientSocket)
         {
-            
+            completePacket.WaitOne();
+
+            Thread.Sleep(1000);
             ushort marker;
 
             Console.Write("\n" +"Router : " + IPAddress.Parse(((IPEndPoint)clientSocket.LocalEndPoint).Address.ToString()) + " Has recived packet !! Marker: ");
             //Console.Write("Router : " + IPAddress.Parse(((IPEndPoint)clientSocket.LocalEndPoint).Address.ToString()) + " Has recived: ");
+            
             for (int i = 0; i < 16; i++)
             {
                 marker = BitConverter.ToUInt16(packet, i * 2);
@@ -75,7 +78,7 @@ namespace BGPSimulator.BGP
                     ushort errorCode = BitConverter.ToUInt16(packet, 40);
                     ushort errorSubCode = BitConverter.ToUInt16(packet, 42);
                     string error = Encoding.UTF8.GetString(packet, 44, 26);
-                    Console.WriteLine("Length: {0} | Type: {1} | ErrorCode: {2} | ErrorSubCode: {3} | Error: {4}", packetLength, packetType, errorCode, errorSubCode, error);
+                    Console.WriteLine(" Length: {0} | Type: {1} | ErrorCode: {2} | ErrorSubCode: {3} | Error: {4}", packetLength, packetType, errorCode, errorSubCode, error);
                     break;
                 case 4:
 
@@ -87,7 +90,7 @@ namespace BGPSimulator.BGP
                     
                     break;
             }
-
+            completePacket.Set();
             
         }
     }

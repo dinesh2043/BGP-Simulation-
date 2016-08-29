@@ -19,13 +19,13 @@ namespace BGPSimulator.BGP
         string stringValue;
         Socket socket;
         ushort tempAS;
-        public void CloseSpeakerListner(string ipAddress)
+        public void CloseSpeakerListner(string ipAddress, int adj , int AS)
         {
             closeSpeaker(ipAddress);
             closeListner(ipAddress);
             withadrawlRoutes(ipAddress, value);
             update();
-            sendNotificationMsg();
+            sendNotificationMsg(adj,AS);
 
         }
         public void closeSpeaker(string ipAddress)
@@ -37,7 +37,7 @@ namespace BGPSimulator.BGP
                 {
                     if (ipAddress == "" + IPAddress.Parse(((IPEndPoint)speaker.Value.LocalEndPoint).Address.ToString()))
                     {
-                        Console.WriteLine("Shutdown Speaker with IP: " + IPAddress.Parse(((IPEndPoint)speaker.Value.LocalEndPoint).Address.ToString()));
+                        Console.WriteLine("Shutdown Connection with Speaker with IP: " + IPAddress.Parse(((IPEndPoint)speaker.Value.LocalEndPoint).Address.ToString()));
                         SpeakerSocket_DictionaryCopy.Add(speaker.Key, speaker.Value);
                         // Release the socket.                       
                         GlobalVariables.speaker_AS.TryRemove("" + IPAddress.Parse(((IPEndPoint)speaker.Value.LocalEndPoint).Address.ToString()), out value);                        
@@ -85,7 +85,7 @@ namespace BGPSimulator.BGP
                 try { 
                 if (ipAddress == "" + IPAddress.Parse(((IPEndPoint)listner.Value.LocalEndPoint).Address.ToString()))
                 {
-                    Console.WriteLine("Shutdown listner with IP: " + IPAddress.Parse(((IPEndPoint)listner.Value.LocalEndPoint).Address.ToString()));
+                    Console.WriteLine("Shutdown Connection with Listner with IP: " + IPAddress.Parse(((IPEndPoint)listner.Value.LocalEndPoint).Address.ToString()));
                     // Release the socket.
 
                     //GlobalVariables.listnerSocket_Dictionary.Remove(listner.Key);
@@ -129,9 +129,21 @@ namespace BGPSimulator.BGP
             //GlobalVariables.withdrawl_IP_Address = ipPrefix;
            GlobalVariables.withdrawnRoutes.Add(AS, withdrawl_Routes);
         }
-        public void sendNotificationMsg()
+        public void sendNotificationMsg(int adj, int AS)
         {
-            updateHandler.sendNotifyMsg(1, "Router conection is Ceased");
+            if (adj == 1)
+            {
+                updateHandler.sendNotifyMsg(adj, AS, "Router conection is Ceased");
+            }
+            if (adj == 3)
+            {
+                updateHandler.sendNotifyMsg(adj, AS, "Router conection is Ceased");
+            }
+            if (adj == 4)
+            {
+                updateHandler.sendNotifyMsg(adj,AS, "Router conection is Ceased");
+            }
+
         }
         public void update()
         {

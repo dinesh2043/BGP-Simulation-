@@ -3,6 +3,7 @@ using BGPSimulator.BGPMessage;
 using System.Net.Sockets;
 using BGPSimulator.FSM;
 using System.Net;
+using System.Threading;
 
 namespace BGPSimulator.BGP
 {
@@ -10,6 +11,9 @@ namespace BGPSimulator.BGP
     {
         public static BGPListner[] bgpListner = new BGPListner[10];
         public static BGPSpeaker[] bgpSpeaker = new BGPSpeaker[14];
+
+        private static AutoResetEvent speakerConnectionRequest = new AutoResetEvent(true);
+
         //to create 13 speaker for 10 routers
         int m = 0;
         //to create 14 different connection
@@ -47,12 +51,15 @@ namespace BGPSimulator.BGP
                     GlobalVariables.listner_AS.TryAdd(GlobalVariables.as3_IP_Prefix + i, AS);
                     
                 }
-                    
-               
+
+                Thread.Sleep(500);
                 //recient computers can handle 500 connections
             }
-            
+           
+
         }
+        
+
         public void StartListning()
         {
            
@@ -128,7 +135,7 @@ namespace BGPSimulator.BGP
                         GlobalVariables.speaker_AS.TryAdd(GlobalVariables.as2_IP_Prefix + k, AS);
                         m++;
                         bgpSpeaker[m] = new BGPSpeaker();
-                        bgpSpeaker[m].BindSpeaker(GlobalVariables.as2_IP_Prefix + k, GlobalVariables.speakerPortNumber + 1, m);
+                        bgpSpeaker[m].BindSpeaker(GlobalVariables.as2_IP_Prefix + k, GlobalVariables.speakerPortNumber+1, m);
                     }
                     else if ( k == 6)
                     {
@@ -136,10 +143,10 @@ namespace BGPSimulator.BGP
                         GlobalVariables.speaker_AS.TryAdd(GlobalVariables.as2_IP_Prefix + k, AS);
                         m++;
                         bgpSpeaker[m] = new BGPSpeaker();
-                        bgpSpeaker[m].BindSpeaker(GlobalVariables.as2_IP_Prefix + k, GlobalVariables.speakerPortNumber + 1, m);
+                        bgpSpeaker[m].BindSpeaker(GlobalVariables.as2_IP_Prefix + k, GlobalVariables.speakerPortNumber+1, m);
                         m++;
                         bgpSpeaker[m] = new BGPSpeaker();
-                        bgpSpeaker[m].BindSpeaker(GlobalVariables.as2_IP_Prefix + k, GlobalVariables.speakerPortNumber + 2, m);
+                        bgpSpeaker[m].BindSpeaker(GlobalVariables.as2_IP_Prefix + k, GlobalVariables.speakerPortNumber+2, m);
                     }
                     else if (k == 4 || k == 5)
                     {
@@ -173,6 +180,8 @@ namespace BGPSimulator.BGP
                 //bgpSpeaker[k].Bind("127.1.0.1", 179, m);
                 m++;
 
+                Thread.Sleep(500);
+
             }
             //SpeakerConnection_Init();
         }
@@ -180,7 +189,8 @@ namespace BGPSimulator.BGP
         {
             for (int k = 0; k < 10; k++)
             {
-                
+
+
                 if (k < 3)
                 {
                     
@@ -202,7 +212,7 @@ namespace BGPSimulator.BGP
                         //bgpSpeaker[k].Connect();
                         GlobalVariables.conAnd_Speaker.TryAdd(n, GlobalVariables.as1_IP_peifix + k);
                         SendOpenMessageToListner(n);
-                        
+
                     }
                     else
                     {
@@ -256,13 +266,21 @@ namespace BGPSimulator.BGP
                         //SendOpenMessageToListner(n);
                         n++;
                         GlobalVariables.speakerConAnd_AS.TryAdd((ushort)n, GlobalVariables.AS2);
+
+                        // *********** Some problem in this connection *********************
+
                         bgpSpeaker[n].Connect(GlobalVariables.as2_IP_Prefix + (k -2), GlobalVariables.listnerPortNumber, k, k-2);
                         GlobalVariables.conAnd_Listner.TryAdd(n, GlobalVariables.as2_IP_Prefix + (k - 2));
                         GlobalVariables.conAnd_Speaker.TryAdd(n, GlobalVariables.as2_IP_Prefix + k);
                         SendOpenMessageToListner(n);
                         //SendOpenMessageToListner(n);
                         n++;
+
+
                         GlobalVariables.speakerConAnd_AS.TryAdd((ushort)n, GlobalVariables.AS2);
+
+                        // *********** Some problem in this connection *********************
+
                         bgpSpeaker[n].Connect(GlobalVariables.as2_IP_Prefix + (k - 3), GlobalVariables.listnerPortNumber, k, k-3);
                         GlobalVariables.conAnd_Listner.TryAdd(n, GlobalVariables.as2_IP_Prefix + (k - 3));
                         GlobalVariables.conAnd_Speaker.TryAdd(n, GlobalVariables.as2_IP_Prefix + k);
@@ -316,6 +334,10 @@ namespace BGPSimulator.BGP
                     **/
                     GlobalVariables.speakerConAnd_AS.TryAdd((ushort)n, GlobalVariables.AS3);
                     //GlobalVariables.listnerIpAddress = GlobalVariables.as3_IP_Prefix +(m-2);
+
+                    // *********** Some problem in this connection *********************
+
+
                     bgpSpeaker[n].Connect(GlobalVariables.as3_IP_Prefix + (k - 2), GlobalVariables.listnerPortNumber, k, k-2);
                     //GlobalVariables.connCountListner = k;
 
@@ -334,23 +356,30 @@ namespace BGPSimulator.BGP
                 //bgpSpeaker[k].Bind("127.1.0.1", 179, m);
 
                 n++;
+
             }
             
+
         }
         public void SendOpenMessageToListner(int k)
-        { 
+        {
             //for (int k = 0; k < 14; k++)
             //{
-               // if (bgpSpeaker[k].conectionFlag == true)
-                //{
+            //if (bgpSpeaker[k].conectionFlag == true)
+            if (GlobalVariables.True)
+                {
+                
                     GlobalVariables.conCountSpeaker = k;
+
+                //Console.WriteLine("*********** SPEAKER NUMBER**************** : " + k);
 
                     //OpenMessage(ushort type, ushort version,ushort myAS, ushort holdTime, string bgpIdentifier, ushort optimalParLength)
                     OpenMessage openPacket = new OpenMessage(GlobalVariables.bgpVerson, GlobalVariables.speakerConAnd_AS[(ushort)k], GlobalVariables.holdTime,
                         GlobalVariables.conAnd_Speaker[k], GlobalVariables.optimalParLength);
 
                     bgpSpeaker[k].Send(openPacket.BGPmessage);
-               // }
+               
+            }
 
            // }
             

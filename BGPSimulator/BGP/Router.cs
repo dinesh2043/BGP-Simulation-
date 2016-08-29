@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 
 namespace BGPSimulator.BGP
 {
@@ -12,6 +13,8 @@ namespace BGPSimulator.BGP
         public Socket _speakerSocket;
         public byte[] _buffer = new byte[1024];
 
+        private static AutoResetEvent speakerStarted = new AutoResetEvent(true);
+        private static AutoResetEvent listnerStarted = new AutoResetEvent(true);
 
         public void ListnerSocket()
         {
@@ -25,12 +28,21 @@ namespace BGPSimulator.BGP
         }
         public void BindSpeaker(string ipAddress, int port, int i)
         {
+            
             //initialize router
             SpeakerSocket();
             // Binding the socket to any IPEndPoint with port parameter
             _speakerSocket.Bind(new IPEndPoint(IPAddress.Parse(ipAddress), port));
+
+            speakerStarted.WaitOne();
+
+            //Console.WriteLine("Speaker IPADDRESS and PORT :  "+ ipAddress+"  "+ port);
+
             Console.WriteLine("Router Speaker: " + i + " IPAddress:" + IPAddress.Parse(((IPEndPoint)_speakerSocket.LocalEndPoint).Address.ToString())
                + " Started!! It is in : " + GlobalVariables.speakerConnectionState + "state !!");
+
+            speakerStarted.Set();
+
         }
         public void BindListner(string ipAddress, int port, int router)
         {
@@ -39,8 +51,13 @@ namespace BGPSimulator.BGP
             // Binding the socket to any IPEndPoint with port parameter
             _listnerSocket.Bind(new IPEndPoint(IPAddress.Parse(ipAddress), port));
 
+            listnerStarted.WaitOne();
+
             Console.WriteLine("Router Listner: " + router + " IPAddress:" + IPAddress.Parse(((IPEndPoint)_listnerSocket.LocalEndPoint).Address.ToString())
                 + " Started!! It is in : " + GlobalVariables.listnerConnectionState + "state !!");
+
+            listnerStarted.Set();
+
         }
         // State object for reading client and server data asynchronously
         

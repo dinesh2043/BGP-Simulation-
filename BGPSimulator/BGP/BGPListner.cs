@@ -16,8 +16,14 @@ namespace BGPSimulator.BGP
         
         public Socket[] tempSocket = new Socket[14];
         public string messageType;
+
+        private static AutoResetEvent acceptedConnection = new AutoResetEvent(true);
+        private static AutoResetEvent recievedMessage = new AutoResetEvent(true);
         
-       
+        //private static AutoResetEvent sendKeepAliveMessage = new AutoResetEvent(true);
+        private static AutoResetEvent sendKeepAlive = new AutoResetEvent(true);
+        private static AutoResetEvent sendUpdateMsg = new AutoResetEvent(true);
+
 
 
         public void Listen(int backlog)
@@ -59,9 +65,12 @@ namespace BGPSimulator.BGP
         {
             try
             {
+                acceptedConnection.WaitOne();
+
                 // Get the socket that handles the client request.
                 Socket listnerSocket = reasult.AsyncState as Socket;
                 listnerSocket = listnerSocket.EndAccept(reasult);
+                
                 //acceptDone.Set();
                 // Create the state object.
                 // StateObject state = new StateObject();
@@ -76,19 +85,22 @@ namespace BGPSimulator.BGP
 
                     }
 
-                    // it is the place where we store data and this step is done to clear previous data from memory
-                    _buffer = new byte[1024];
-                    // this is done to be ready to recive data 
-                    // the four paramaters are buffer, the place in packet where 0 is the begining of packet, the amount of data where we set full capacity of buffer
-                    // SocketFlag is none, when the data is received the next parameter defines where to send data, and last one is the connection which should be passed 
-                    // to callback method
-                    listnerSocket.BeginReceive(_buffer, 0, _buffer.Length, SocketFlags.None, ReceivedCallback, listnerSocket);
-                    //reciveDone.WaitOne();
+                acceptedConnection.Set();
 
-                    //accept method is called to listen to more connection
-                    Accept();
-                    //acceptDone.WaitOne();
+                // it is the place where we store data and this step is done to clear previous data from memory
+                _buffer = new byte[1024];
+
+                // this is done to be ready to recive data 
+                // the four paramaters are buffer, the place in packet where 0 is the begining of packet, the amount of data where we set full capacity of buffer
+                // SocketFlag is none, when the data is received the next parameter defines where to send data, and last one is the connection which should be passed 
+                // to callback method
+                listnerSocket.BeginReceive(_buffer, 0, _buffer.Length, SocketFlags.None, ReceivedCallback, listnerSocket);
+                //reciveDone.WaitOne();
                 
+                //accept method is called to listen to more connection
+                Accept();
+                //acceptDone.WaitOne();
+                recievedMessage.WaitOne();
 
 
 
@@ -102,6 +114,7 @@ namespace BGPSimulator.BGP
         {
             try
             {
+                
                 // we catch that connection we send and since AsyncState is a object so we set it as Socket to get connection
                 Socket listnerSocket = reasult.AsyncState as Socket;
                 
@@ -116,7 +129,7 @@ namespace BGPSimulator.BGP
                 //reciveDone.Set();
                 //if (bufferSize == 58 || bufferSize == 40)
                 //{
-
+                
                 //it is done to store to store the data in buffer to packet
                 byte[] packet = new byte[bufferSize];
                 //reciveDone.Set();
@@ -126,9 +139,14 @@ namespace BGPSimulator.BGP
                 // it is done to create a shadow clone of buffer before anyone uses it
                 // this method stores the data in buffer to packet
                 Array.Copy(_buffer, packet, packet.Length);
+
+                
+
                 //Handle the packet
                 PacketHandler.Handle(packet, listnerSocket);
-                
+
+                recievedMessage.Set();
+
                 FSM_Listner.BGPOpenMsgRecived(GlobalVariables.True);
                 
                 //}
@@ -183,17 +201,28 @@ namespace BGPSimulator.BGP
             if (GlobalVariables.keepAliveMsgSendCount < GlobalVariables.listnerSocket_Dictionary.Count)
             {
                 
+
+
                 //tempSocket[GlobalVariables.keepAliveMsgSendCount] = GlobalVariables.listnerSocket_Dictionary[GlobalVariables.keepAliveMsgSendCount];
                 Socket tempSock = GlobalVariables.listnerSocket_Dictionary[GlobalVariables.keepAliveMsgSendCount];
                 KeepAliveMessage keepAlivePacket = new KeepAliveMessage();
                 messageType = "KeepAlive";
+
+                //sendKeepAliveMessage.WaitOne();
+
                 //Socket temSoc = tempSocket[GlobalVariables.keepAliveMsgSendCount];
                 Console.WriteLine("BGP Listner:" + IPAddress.Parse(((IPEndPoint)tempSock.LocalEndPoint).Address.ToString()) + " has send keepAlive Message !!");
+
+                
+
                 SendSpeaker(keepAlivePacket.BGPmessage, tempSock, messageType);
-                
+                //sendKeepAliveMessage.Set();
+
                 //sendKeepAliveDone.WaitOne();
-                
+
                 GlobalVariables.keepAliveMsgSendCount++;
+
+                
             }
 
         }
@@ -203,11 +232,19 @@ namespace BGPSimulator.BGP
             {
                 if (GlobalVariables.listnerSocket_Dictionary.ContainsKey(GlobalVariables.keepAliveExpiredCount))
                 {
+
+                    
+
                     Socket tempSock = GlobalVariables.listnerSocket_Dictionary[GlobalVariables.keepAliveExpiredCount];
                     KeepAliveMessage keepAlivePacket = new KeepAliveMessage();
                     messageType = "KeepAlive";
 
+                    sendKeepAlive.WaitOne();
+
                     Console.WriteLine("BGP Listner:" + IPAddress.Parse(((IPEndPoint)tempSock.LocalEndPoint).Address.ToString()) + " has send keepAlive Message !!");
+
+                    sendKeepAlive.Set();
+
                     SendSpeaker(keepAlivePacket.BGPmessage, tempSock, messageType);
                     GlobalVariables.keepAliveExpiredCount++;
                 }
@@ -251,8 +288,11 @@ namespace BGPSimulator.BGP
                 {
                     messageType = msg;
                     listnerSocket.BeginSend(data, 0, data.Length, 0, SendCallback, sendSock);
+
+                    sendUpdateMsg.WaitOne();
                     //Console.WriteLine("Listner Send update message to speeker");
-                }else if (msg == "Notify")
+                }
+                else if (msg == "Notify")
                 {
                     messageType = msg;
                     listnerSocket.BeginSend(data, 0, data.Length, 0, SendCallback, sendSock);
@@ -277,14 +317,14 @@ namespace BGPSimulator.BGP
 
                 // Complete sending the data to the remote device.
                 int bytesSent = listnerSocket.EndSend(result);
-                
-                
+                sendUpdateMsg.Set();
 
 
-                
+
+
                 //sendOpenDone.Set();
                 //sendKeepAliveDone.Set();
-               
+
 
                 //sendDone.Set();
                 //FSM_Listner.BGPOpenMsgSent(GlobalVariables.True);

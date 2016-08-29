@@ -228,6 +228,7 @@ namespace BGPSimulator.FSM
     public class UpdateMessageHandling
     {
         FinateStateMachine FSM = new FinateStateMachine();
+        int count = 0;
         public void adj_RIB_Out()
         {
             int i = 0;
@@ -255,6 +256,7 @@ namespace BGPSimulator.FSM
                         //   + row.Field<string>(3) + " NH_AS: " + row.Field<int>(4) + " EGP: " + row.Field<int>(5));
                     }
                 }
+
                 // Local policy to find adj_RIB_Out AS2
                 if (row.Field<int>(2) == 2 || row.Field<int>(4) == 2)
                 {
@@ -359,6 +361,7 @@ namespace BGPSimulator.FSM
         {
             BGPListner bgpListner = new BGPListner();
             BGPSpeaker bgpSpeaker = new BGPSpeaker();
+            
             foreach (KeyValuePair<int, Tuple<int, string, int, string, int, int, string, Tuple<string>>> entry in GlobalVariables.Adj_RIB_Out)
             {
                 //switch (entry.Key)
@@ -469,8 +472,9 @@ namespace BGPSimulator.FSM
                                         if ((speakerListner.Value.Item3 == "" + IPAddress.Parse(((IPEndPoint)listner.Value.LocalEndPoint).Address.ToString())) &&
                                             (speakerListner.Value.Item1 == "" + IPAddress.Parse(((IPEndPoint)listner.Value.RemoteEndPoint).Address.ToString())))
                                         {
-                                            //  Console.WriteLine("Listner IP: {0}| Speaker IP: {1}", IPAddress.Parse(((IPEndPoint)listner1.Value.LocalEndPoint).Address.ToString()),
-                                            // IPAddress.Parse(((IPEndPoint)listner1.Value.RemoteEndPoint).Address.ToString()));
+                                           // Socket listnerSocket = listner.Value;
+                                           //   Console.WriteLine("Listner IP: {0}| Speaker IP: {1}", IPAddress.Parse(((IPEndPoint)listner.Value.LocalEndPoint).Address.ToString()),
+                                           // IPAddress.Parse(((IPEndPoint)listner.Value.RemoteEndPoint).Address.ToString()));
 
                                             bgpListner.SendSpeaker(updatePacket.BGPmessage, listner.Value, "Update");
                                             FSM.BGPUpdateMsgSent(GlobalVariables.True);
@@ -496,9 +500,17 @@ namespace BGPSimulator.FSM
                                             //Socket speakerSocket = speaker.Value;
                                             //Console.WriteLine("Speaker IP: {0}| Listner IP: {1}", IPAddress.Parse(((IPEndPoint)speaker.Value.LocalEndPoint).Address.ToString()),
                                             //IPAddress.Parse(((IPEndPoint)speaker.Value.RemoteEndPoint).Address.ToString()));
-
-                                            //bgpSpeaker.SendListner(updatePacket.BGPmessage, speaker.Value, "Update");
-                                            //FSM.BGPUpdateMsgSent(GlobalVariables.True);
+                                            
+                                            if (!speakerListner.Value.Item3.Equals("127.2.0.5"))
+                                           {
+                                                count++;
+                                                if(count < 2)
+                                                {
+                                                    bgpSpeaker.SendListner(updatePacket.BGPmessage, speaker.Value, "Update");
+                                                    FSM.BGPUpdateMsgSent(GlobalVariables.True);
+                                                }
+                                                
+                                            }
                                         }
                                     }
                                 }
@@ -562,11 +574,16 @@ namespace BGPSimulator.FSM
                                             (speakerListner.Value.Item3 == "" + IPAddress.Parse(((IPEndPoint)speaker.Value.RemoteEndPoint).Address.ToString())))
                                         {
                                             //Socket speakerSocket = speaker.Value;
-                                            // Console.WriteLine("Speaker IP: {0}| Listner IP: {1}", IPAddress.Parse(((IPEndPoint)speaker.Value.LocalEndPoint).Address.ToString()),
-                                            //     IPAddress.Parse(((IPEndPoint)speaker.Value.RemoteEndPoint).Address.ToString()));
+                                            //Console.WriteLine("Speaker IP: {0}| Listner IP: {1}", IPAddress.Parse(((IPEndPoint)speaker.Value.LocalEndPoint).Address.ToString()),
+                                            //  IPAddress.Parse(((IPEndPoint)speaker.Value.RemoteEndPoint).Address.ToString()));
                                             //BGPSpeaker bgpSpeaker = new BGPSpeaker();
-                                            bgpSpeaker.SendListner(updatePacket.BGPmessage, speaker.Value, "Update");
-                                            FSM.BGPUpdateMsgSent(GlobalVariables.True);
+
+                                           // if (!speakerListner.Value.Item3.Equals("127.2.0.4"))
+                                           // {
+                                                bgpSpeaker.SendListner(updatePacket.BGPmessage, speaker.Value, "Update");
+                                                FSM.BGPUpdateMsgSent(GlobalVariables.True);
+
+                                           // }    
                                         }
 
                                     }
@@ -648,21 +665,29 @@ namespace BGPSimulator.FSM
                 }
             }
         }
-        public void sendNotifyMsg(int i, string error)
+        public void sendNotifyMsg(int adj, int AS, string error)
         {
             BGPListner bgpListner = new BGPListner();
             BGPSpeaker bgpSpeaker = new BGPSpeaker();
-            Tuple<int, string> nlri = GlobalVariables.NLRI[i];
-            Tuple<int, string> pathSegment = GlobalVariables.pathSegment[i];
+            String adjRIBItem;
+            Tuple<int, string> nlri = GlobalVariables.NLRI[adj];
+            Tuple<int, string> pathSegment = GlobalVariables.pathSegment[adj];
             //pathAttribute is the combination of attribute length, attribute(origin), attrFlag and attrTypeCode
-            Tuple<int, string, int, ushort> pathAttribute = GlobalVariables.pathAttribute[i];
+            Tuple<int, string, int, ushort> pathAttribute = GlobalVariables.pathAttribute[adj];
             //Tuple consists of connection count, network, N_AS, Next_Hop, NH_AS, EGP/IGP, AS_prefix
-            Tuple<int, string, int, string, int, int, string, Tuple<string>> adj_RIB_Out = GlobalVariables.Adj_RIB_Out[i];
+            Tuple<int, string, int, string, int, int, string, Tuple<string>> adj_RIB_Out = GlobalVariables.Adj_RIB_Out[adj];
 
-
-            if (GlobalVariables.withdrawnRoutes.ContainsKey(1))
+            if (adj < 4)
             {
-                Tuple<string, int> withdrawlInfo = GlobalVariables.withdrawnRoutes[1];
+                adjRIBItem = adj_RIB_Out.Item2;
+            }else
+            {
+                adjRIBItem = adj_RIB_Out.Item4;
+            }
+
+            if (GlobalVariables.withdrawnRoutes.ContainsKey(adj))
+            {
+                Tuple<string, int> withdrawlInfo = GlobalVariables.withdrawnRoutes[adj];
                 GlobalVariables.withdrawl_IP_Address = withdrawlInfo.Item1;
                 GlobalVariables.withdrawl_Length = withdrawlInfo.Item2;
             }
@@ -674,7 +699,7 @@ namespace BGPSimulator.FSM
             NotificationMessage notifyPacket = new NotificationMessage(GlobalVariables.errorCode, GlobalVariables.erorSubCode, error);
             foreach (KeyValuePair<int, Tuple<string, ushort, string, ushort>> speakerListner in GlobalVariables.conSpeakerAs_ListnerAs)
             {
-                if ((adj_RIB_Out.Item2 == speakerListner.Value.Item3) && (speakerListner.Value.Item2 == 1) && (speakerListner.Value.Item4 == 1))
+                if ((adjRIBItem == speakerListner.Value.Item3) && (speakerListner.Value.Item2 == AS) && (speakerListner.Value.Item4 == AS))
                 {
                     foreach (KeyValuePair<int, Socket> listner in GlobalVariables.listnerSocket_Dictionary)
                     {
@@ -696,7 +721,7 @@ namespace BGPSimulator.FSM
                         }
                     }
                 }
-                if ((adj_RIB_Out.Item2 == speakerListner.Value.Item1) && (speakerListner.Value.Item2 == 1) && (speakerListner.Value.Item4 == 1))
+                if ((adjRIBItem == speakerListner.Value.Item1) && (speakerListner.Value.Item2 == AS) && (speakerListner.Value.Item4 == AS))
                 {
                     foreach (KeyValuePair<int, Socket> speaker in GlobalVariables.SpeakerSocket_Dictionary)
                     {
