@@ -601,70 +601,205 @@ As I have mentioned in the above section when the speaker receives the keep aliv
 Figure 21: Keep alive message received by Speaker and their connection state 
 
 Similarly in the error situation where the connection state is established but connection keep alive timer expires then FSM is responsible to reset the timer and trigger the listener to send keep alive message to the speaker. In the following figure I have shown the output when the timer expires and listener sends keep alive message;
+
+![img](https://github.com/dinesh2043/BGP-Simulation-/blob/master/img5.jpg)
   
 Figure 22: Keep alive timer expired and keep alive message send by listener 
 
 ### Routers
 During the implementation of the routers I have realised that it would have been easier for this project to use higher programming platforms like NS3. It was difficult to implement routers from listener and speaker sockets. Due to the additional complexity to implement the default gateway for those sockets to work as a single router. In the beginning I was confused about the implementation of routers but after spending some time in sockets API, I realised that it might be possible. There was a possibility to have same IP address for different sockets if the port number is not same which made my task little bit easier. So, that it was possible to bind more than one sockets into one IP address. And without implementing default gateway address I was able to use same IP in different sockets with different port. With this flexibility I was able to define port 179 for BGP listener and other ports for required speaker. In router class I have defined both speaker and listener socket that uses IPV4 network protocol, transfers data stream and follows TCP connection protocol. I have bind all listeners to port 179 to address BGP requirements. Similarly, using asynchronous socket I was able to have a listener capable to have multiple connection as specified by BGP. Due to that reason only 10 listener sockets with different IP address were enough for the project implementation. But in case of speaker socket it was not possible to have same socket for multiple connection initiation even though it is asynchronous socket. Which has resulted to create 14 sockets with 10 different IP address and up-to 3 different port for same IP. I am going to explain about this implementation in initialization of listener and speaker section. But router class is a general class which sets the parameter to define listener and speaker sockets. Actually for this implementation I have used the byte array of 1024 byte to store data stream of BGP message. In the following section of the code we can see the declaration and binding process of the sockets;
 
+```
+	public Socket _listnerSocket;
+	public Socket _speakerSocket;
+	public byte[] _buffer = new byte[1024];
+	public void ListnerSocket() 
+	{            _
+           listnerSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+ 	}
+	public void SpeakerSocket()
+  	{
+            _speakerSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+    	}
+	public void BindSpeaker(string ipAddress, int port, int i)
+        {
+            //initialize router
+            SpeakerSocket();
+            // Binding the socket to any IPEndPoint with port parameter
+            _speakerSocket.Bind(new IPEndPoint(IPAddress.Parse(ipAddress), port));
+	    Console.WriteLine("Router Speaker: " + i + " IPAddress:" + IPAddress.Parse(((IPEndPoint)_speakerSocket.LocalEndPoint).Address.ToString())
+               + " Started!! It is in : " + GlobalVariables.speakerConnectionState + "state !!");
+        }
+        public void BindListner(string ipAddress, int port, int router)
+        {
+            //initialize router
+            ListnerSocket();
+            // Binding the socket to any IPEndPoint with port parameter
+            _listnerSocket.Bind(new IPEndPoint(IPAddress.Parse(ipAddress), port));
 
-
-
-
-    
-
+            Console.WriteLine("Router Listner: " + router + " IPAddress:" + IPAddress.Parse(((IPEndPoint)_listnerSocket.LocalEndPoint).Address.ToString())
+                + " Started!! It is in : " + GlobalVariables.listnerConnectionState + "state !!");
+        }	
+```
 
 Figure 23: Code implementation for creating the routers with speaker and listener socket
+
 #### Listener Socket
 Since, listener socket inherits the router class and socket is already defined and bind in router class. Therefore in listener socket, listener specific methods like listen, accept, send method are defined in listener class. In asynchronous sockets accept and send method have their own call-back methods called accept call-back and send call-back. In the accept call-back method after the connection is accepted, received call-back method is invoked to receive the message send by the speaker. Listen method helps the socket to listen the incoming connection request. When the socket receives the connection request it calls the accept method. Then accept method triggers the accept call-back method, and the connection is accepted in accept call-back. When the connection is accepted it invokes receive call-back method to receive messages. To send the message send method is triggered which invokes send call-back method to initiate sending message. In the following section I am going to present listen and accept methods of this class;
        
+```
+	public void Listen(int backlog)
+        {
+	//modern processors  listens for 500 tcp backup connection request
+            _listnerSocket.Listen(backlog);
+        }
+	public void Accept() {           
+      		try {               
+                // Start an asynchronous socket to listen for connections.
+                // Begin to accept the client connection
+		// and it asks for two parameter with AsyncCallback and object (AcceptedCallback and null) null is set for object reference parameter
+	       _listnerSocket.BeginAccept( AcceptedCallback, _listnerSocket);            
+		    } catch (Exception e) {
+			Console.WriteLine(e.ToString());
+		    }
+        }
 
-
-
-
+```
 
 Figure 24: Listener socket listen and accept method
+
 Similarly in the following code I have shown the implementation of accept call-back, receive call-back, send and send call-back methods. As we can see the try catch statement is use to catch the error occurred during this process.
 
-
-
-
-
-
-
-
-
-
+```
+	private void AcceptedCallback(IAsyncResult reasult) {
+    		try{
+                Socket listnerSocket = reasult.AsyncState as Socket;
+                listnerSocket = listnerSocket.EndAccept(reasult);
+         		if (GlobalVariables.ConnectionCount <       
+               		 GlobalVariables.conAnd_Speaker.Count){                       
+				GlobalVariables.listnerSocket_Dictionary.TryAdd(GlobalVariables.ConnectionCount, listnerSocket);
+              			GlobalVariables.ConnectionCount++;
+                    	}
+                    	_buffer = new byte[1024];
+                    	listnerSocket.BeginReceive(_buffer, 0, _buffer.Length, SocketFlags.None, ReceivedCallback, listnerSocket);
+                    	Accept();
+            }catch (Exception e) {
+                Console.WriteLine(e.ToString());
+            }
+        } 
+	private void ReceivedCallback(IAsyncResult reasult) {
+            try{
+                Socket listnerSocket = reasult.AsyncState as Socket;
+                int bufferSize = listnerSocket.EndReceive(reasult);
+                byte[] packet = new byte[bufferSize];
+                Array.Copy(_buffer, packet, packet.Length);
+                //Handle the packet
+                PacketHandler.Handle(packet, listnerSocket);              
+                FSM_Listner.BGPOpenMsgRecived(GlobalVariables.True);                
+                _buffer = new byte[1024];
+                listnerSocket.BeginReceive(_buffer, 0, _buffer.Length, SocketFlags.None, ReceivedCallback, listnerSocket);
+            }catch (ObjectDisposedException ex){
+                // Don't care
+		 Console.WriteLine("Listner socket is closed");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+        }
+	public void SendSpeaker(byte[] data, Socket sendSock, string msg){
+         try {
+                Socket listnerSocket = sendSock;
+                if (msg == "OPEN") {                 
+                    messageType = msg;                                        
+		    listnerSocket.BeginSend(data, 0, data.Length, 0, SendCallback, sendSock);
+                }else if (msg == "KeepAlive") {                    
+                    messageType = msg;
+                    listnerSocket.BeginSend(data, 0, data.Length, 0, SendCallback, sendSock);
+                }else if (msg == "Update") {
+                    messageType = msg;
+                    listnerSocket.BeginSend(data, 0, data.Length, 0, SendCallback, sendSock);
+                }else if (msg == "Notify") {
+                    messageType = msg;
+                    listnerSocket.BeginSend(data, 0, data.Length, 0, SendCallback, sendSock);
+                }
+            }catch (Exception e){
+                Console.WriteLine(e.ToString());
+            }
+        }
+	private void SendCallback(IAsyncResult result) {
+         	try{                
+			Socket listnerSocket = result.AsyncState as Socket;
+			// Complete sending the data to the remote device.
+			int bytesSent = listnerSocket.EndSend(result);
+            	}
+            	catch (Exception e)
+            	{
+                	Console.WriteLine(e.ToString());
+           	 }
+        }
+```
 
 Figure 25: Call-back events implementations of listener socket class.
+
 #### Speaker Socket
+
 AS I have mentioned in previous step speaker socket also inherits the router class to use socket, bind socket to an IP address and to define a port number. In my application speaker port starts from 176 and I have used ports until 178 for creating 14 different speaker. Send method, send call-back method and received call-back method are similar to listener sockets. But speakers are the one to initiate connection that’s why they have connect and connect call-back methods. When connect method is called it triggers connect call-back method and if the connection is complete then it calls received call-back method. When it receives message it sends that packet to packet handler with socket information to print it in human readable format. The socket is passed to the packet handler class so that I can track both the end point of the connection. Which can be seen in printed messages with both the sending and receiving end IP address information. In the following section of the code I will show my implementation of connect and connection call-back method;
 
-
-
-
-
-
-
-
+```
+	public void Connect(string ipAddress, int port, int speaker , int listner) {
+                        try {             
+                SpeakerID = speaker;
+                ListnerID = listner;
+                _speakerSocket.BeginConnect(new IPEndPoint(IPAddress.Parse(ipAddress), port), ConnectCallback, _speakerSocket);             
+            } catch (Exception e) {
+                Console.WriteLine(e.ToString());
+            }
+        }
+	private void ConnectCallback(IAsyncResult reasult) {
+            try{             
+                    conectionFlag = _speakerSocket.Connected;
+                    GlobalVariables.True = conectionFlag;
+                    Socket speakerSocket = reasult.AsyncState as Socket;
+                    // when one client connection is accepted then it stops accepting other clients by EndAccept
+                  speakerSocket.EndConnect(reasult);
+                    //Store the speaker socket                   
+		    GlobalVariables.SpeakerSocket_Dictionary.TryAdd(GlobalVariables.currentSpeakerCount, speakerSocket);
+                    GlobalVariables.currentSpeakerCount++;
+                    GlobalVariables.listnerNumber = ListnerID;	
+		    GlobalVariables.speakerIpAddress = ((IPEndPoint)speakerSocket.LocalEndPoint).Address.ToString();
+                    GlobalVariables.listnerIpAddress = ((IPEndPoint)speakerSocket.RemoteEndPoint).Address.ToString();                  
+                    Console.Write("BGP Speaker " + SpeakerID + " : " + 
+		    IPAddress.Parse(((IPEndPoint)speakerSocket.LocalEndPoint).Address.ToString()) + " Connected to ---->" + "BGP Listner " + ListnerID +  " : "+ IPAddress.Parse(((IPEndPoint)speakerSocket.RemoteEndPoint).Address.ToString()));
+		    FSM_Speaker.TcpConnectionConformed(GlobalVariables.True);
+                    Console.WriteLine("BGP Listner : {0}| is in state : {1}", GlobalVariables.listnerIpAddress, GlobalVariables.listnerConnectionState);                  
+                    _buffer = new byte[1024];
+                    speakerSocket.BeginReceive(_buffer, 0, _buffer.Length, SocketFlags.None, ReceivedCallback, speakerSocket);
+                  
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+           
+        }
+```
 
 Figure 26: Connect and connect call-back method of speaker socket class
+
 ### Initialization of Listener and speaker 
+
 It was another difficult task to implement all the listener and speaker socket to proper IP address and port number so that they can work as one router. On top of that all the routers in one AS were supposed to be in the mesh connection topology. Initially I tried to implement it as a dynamic code where if we define the numbers of router then the initialization and connection of the sockets is done by the program. But it was complex architecture it increased the difficulty level of this implementation. Due to that reason I have done static implementation of the sockets and their connection. It would have been better to have the dynamic implementation for the connection according to the numbers of routers in the AS, which leaves a space for the further development of this project. In this static implementation I have 10 listener sockets with different IP address and same port 179. Similarly I have 14 speaker sockets because in the mesh connection topology I need 14 different connection and in the same IP address there might be 1 to 3 speaking socket with different port ranging from 176 to 178. All this routers are divided into 3 AS and their IP prefixes are 127.1, 127.2 and 127.3. Since there were 3 AS and for simplicity I have implanted only 2 inter AS connection in the implantation. In the following figure I have shown my structure of the routers in 3 different AS.  
-	R0: 127.1.0.0	R3: 127.2.0.3              R4: 127.2.0.4                                                       R7: 127.3.0.7
 
+![img](https://github.com/dinesh2043/BGP-Simulation-/blob/master/img6.jpg)
 
-
-R1: 127.1.0.1             R2: 127.1.0.2                                        R5: 127.2.0.5            R6: 127.2.0.6                                    R8: 127.3.0.8            R9: 127.3.0.9
-AS1: 127.1	AS2: 127.2	AS3: 127.3
 Figure 27: Autonomous systems and their connection 
+
 First of all I have initialized 10 instances of listener socket class to define 10 different IP address and port number. While defining these two information I have already divided the listeners IP address according to different AS IP prefix. The code which binds the socket is inside the loop so that I can create 10 listener sockets. This portion of the implantation can be seen in the following code;
 
+```
 
- 
-
-
-
+```
 Figure 28: Listener socket initialization process
 When this code is executed all the listener sockets are created and they will be online to listen and accept the connection request send by the speaker. Following console output shows the result when the application is executed; 
 
