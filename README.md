@@ -64,23 +64,90 @@ Figure 2: Writing the message marker, length and type in the temporary buffer by
 
 Similarly, the message specific data like e.g. version, hold time, BGP identifier, optimal parameter length, withdrawn routes, network layer reachability information (NLRI) prefix, attribute, path segment e.t.c. are also written in the buffer using message structure class. In the following code you can see the implementation of these functionality in code;
 
-
-
-
-
-
-
-
+```
+	public void writeHoldTime(ushort value, int offset)
+        {
+            byte[] tempBuf = new byte[2];
+            tempBuf = BitConverter.GetBytes(value);
+            Buffer.BlockCopy(tempBuf, 0, _buffer, offset, 2);
+        }
+        public void writeBgpIdentifier(string value, int offset)
+        {
+            byte[] tempBuf = new byte[value.Length];
+            tempBuf = Encoding.UTF8.GetBytes(value);
+            Buffer.BlockCopy(tempBuf, 0, _buffer, offset, value.Length);
+        }
+        
+        public void writeOptimalPerLength(ushort value, int offset)
+        {
+            byte[] tempBuf = new byte[2];
+            tempBuf = BitConverter.GetBytes(value);
+            Buffer.BlockCopy(tempBuf, 0, _buffer, offset,2);
+	}
+	public void writeWithdrawlRoutes(string value, int offset)
+        {
+            byte[] tempBuf = new byte[value.Length];
+            tempBuf = Encoding.UTF8.GetBytes(value);
+            Buffer.BlockCopy(tempBuf, 0, _buffer, offset, value.Length);
+        }
+	public void writeIpPrefix(string value, int offset)
+        {
+            byte[] tempBuf = new byte[value.Length];
+            tempBuf = Encoding.UTF8.GetBytes(value);
+            Buffer.BlockCopy(tempBuf, 0 , _buffer, offset, value.Length);
+        }
+	public void writeAttribute(string value, int offset)
+        {
+            byte[] tempBuf = new byte[value.Length];
+            tempBuf = Encoding.UTF8.GetBytes(value);
+            Buffer.BlockCopy(tempBuf, 0, _buffer, offset, value.Length);
+        }
+	
+```
 
 Figure 3: Codes for writing message data inside temporary buffer of the packet 
 #### BGP Open Message
 BGP open message class inherits the abstract message structure class to construct the open message packets in this implementation. All the related additional information of this message is supplied through this class. According to BGP documentation, I have used BGP version, AS info, BGP Identifier IP address, hold time and optimal parameter length. Open message is constructed to have a length of 40 octets. All the different data of open message are stored in different memory location by defining the slots for the byte array. Which makes it easier to track the particular data from the particular slot while handling the message. Both BGP listeners and BGP speakers use the open message constructor to send open message to each other. In the following section you can see the code which uses the supplied values to the variables and sends it to the message structure class to store the information in the byte array; 
 
- 
-
-
-
-
+```
+	public OpenMessage(ushort version,ushort myAS, ushort holdTime, string bgpIdentifier, ushort optimalParLength)
+     : base ((ushort)(38 + 2 + 2 + 4 + bgpIdentifier.Length + 1 + 2),40)
+        {
+            //Text = message;
+            Type = 1;
+            Version = version;
+            MyAS = myAS;
+            HoldTime = holdTime;
+            BgpIdentifier = bgpIdentifier;
+            OptimalParLength = optimalParLength; 
+        }
+	public ushort Type
+        {
+            get { return _type; }
+            set {
+                _type = value;
+                writeType(value,38);
+            }
+        }
+	public string BgpIdentifier
+        {
+            get { return _bgpIndentifier; }
+            set
+            {
+                _bgpIndentifier = value;
+                writeBgpIdentifier(value, 46);
+            }
+        }
+        public ushort OptimalParLength
+        {
+            get { return _optionalParLength; }
+            set
+            {
+                _optionalParLength = value;
+                writeOptimalPerLength(value, 55);
+            }
+        }
+```
 
 Figure 4: Construction of open message and storing it to the particular slot of byte array.
 
@@ -88,8 +155,30 @@ Figure 4: Construction of open message and storing it to the particular slot of 
 
 Similarly keep alive is a short 19 octet message used by BGP system to keep the TCP connection alive between listener and the speaker with the help of keep alive timer event of FSM. Keep alive message implementation consists the BGP message header and the message type information. For its implementation only message header and message type information is written in the buffer array. Normally when the BGP listener receives the open message from the speaker it sends keep alive message to keep the connection alive. At the same time the keep alive timer of the state machine is set and when the timer is expired it also triggers the keep alive message. In the following code we can see the implementation;
 
-
-
+```
+	public class KeepAliveMessage : MessageStructure
+    	{
+        // marker and length values are 16 and 3 octets which contains 32 and 6 slots
+        // type is 1 octet consists 2 slots
+        private ushort _type;
+        public KeepAliveMessage()
+            : base ((ushort)(38 + 2),19)
+        {
+            Type = 4;
+        }
+	        public KeepAliveMessage(byte[] packet) 
+            : base(packet)
+        {
+        }
+        public ushort Type
+        {
+            get { return _type; }
+            set
+            {
+                _type = value;
+                writeType(value, 38);
+            }
+```
 
 Figure 5: Keep alive message implementation
 
@@ -97,48 +186,186 @@ Figure 5: Keep alive message implementation
 
 It was little bit complicated message because it has quite a lot of routing information which should be dynamically created within the AS during run time. In BGP system update message is used to exchange network reachability information within same AS. BGP speaker is responsible for the advertisement and enforcement local policies to its peer. It is a long message with 184 octet length with many information’s like; withdrawn route length, withdrawn route, IP prefix length, IP prefix, total path attribute length, attribute flag, type code, attribute, path segment type, path segment length, path segment value, NLRI length, NLRI prefix e.t.c. In the following code snippet I have tried to show, its implementation in the project;
 
-
-
-
-
+```
+	public UpdateMessage(UInt16 withdrawRouteLength, string withdrawlRoute, ushort ipPrefixLength, string ipPrefix, ushort totalPathAttributeLength, 
+             UInt32 attributeLength, UInt32 attrFlags, ushort typeCode, string attribute, ushort pathSegmentType, 
+            ushort pathSegmentLength,string pathSegmentValue, ushort nlrLength, string nlrPrefix)
+            : base ((ushort)(38 + 2 + withdrawlRoute.Length+ 4 + 2 + ipPrefix.Length + 4 + 4 + 4 + 4 + 4 +attribute.Length+ 4 + 4 + pathSegmentValue.Length + 4 + nlrPrefix.Length),184)
+        {
+            Type = 2;
+            WithdrawRouteLength = withdrawRouteLength;
+            WithdrawRoutes = withdrawlRoute;
+            IpPrefixLength = ipPrefixLength;
+            IpPrefix = ipPrefix;
+            TotalPathAttributeLength = totalPathAttributeLength;
+            AttrFlags = attrFlags;
+            TypeCode = typeCode;
+            AttributeLength = attributeLength;
+	    Attribute = attribute;
+            PathSegmentType = pathSegmentType;
+            PathSegmentLength = pathSegmentLength;
+            PathSegmentValue = pathSegmentValue;
+            NlrLength = nlrLength;
+            NlrPrefix = nlrPrefix;
+        }
+	public string WithdrawRoutes
+        {
+            get { return _withdrawnRoutes; }
+            set{
+                _withdrawnRoutes = value;
+                writeWithdrawlRoutes(value, 42);
+            }
+        }
+	public string Attribute
+        {
+            get { return _attribute; }
+            set{
+                _attribute = value;
+                writeAttribute(value, 66);
+		}
+	}	
+```
 
 Figure 6: Writing update variables in temporary buffer array
 
 #### Notification Message
 Similarly notification message is a short 21 octet message used to notify the BGP system when some errors happens within the same AS. Normally notify consists of error code, error sub code and error information data. In the following code we can see an example implementation of this particular message;
 
+```
+	public NotificationMessage(ushort errorCode, ushort errorSubCode, string data)
+            : base((ushort)(38 + 2 + 2 + 2 + data.Length), 21)
+        {
+            Type = 3;
+            ErrorCode = errorCode;
+            ErrorSubCode = errorSubCode;
+            Data = data;
+        } 
+	public ushort ErrorCode
+        {
+            get { return _errorCode; }
+            set
+            {
+                _errorCode = value;
+                writeErrorCode(value, 40);
+            }
+	  }
+	  public ushort ErrorSubCode
+        {
+            get { return _errorSubCode; }
+            set
+            {
+                _errorSubCode = value;
+                writeErrorSubCode(value, 42);
+            }
+        }
+        public string Data
+        {
+            get { return _data; }
+            set
+            {
+                _data = value;
+                writeData(value, 44);
+            }
+        }
 
-
-
+```
 
 Figure 7: Implementation of notification message
 
 #### Reading the data from byte array (Packet Handler Class)
 According to my implementation all the data of the packets are stored in the temporary byte array and it is important to know the particular slot of the array to find the particular information. During this portion of the implementation I struggled with the different byte size in different characters of IP address information. Since all of my implementation of IP address has 6 characters except one with 7 characters (127.3.0.10). This one character difference made the code unable to read the IP address properly. It took around 3 hours for me to find this particular problem and read that IP address. As the requirement of this project was to use 10 routers and it was a dynamic implementation so that I used all the IP address with 6 characters starting from 127.1.0.0. In this implementations to read data from all four different BGP message stored in byte array I have used static packet handler class. In the following example code I have shown the implementation of update message;
 
-
-
-
-
+```
+	 for (int i = 0; i < 16; i++)
+            {
+                marker = BitConverter.ToUInt16(packet, i * 2);
+                Console.Write(marker);
+            }
+            //packetMarkerDone.Set();
+            ushort packetLength = BitConverter.ToUInt16(packet, 32);
+            ushort packetType = BitConverter.ToUInt16(packet, 38);
+	case 2:
+            UInt16 withdrawlRouteLength = BitConverter.ToUInt16(packet, 40);
+            string withdrawlRoutes = Encoding.UTF8.GetString(packet, 42, 9);
+            ushort ipPrefixLength = BitConverter.ToUInt16(packet, 51);
+             string ipPrefix = Encoding.UTF8.GetString(packet, 53, 5);
+             ushort totalPathAttribute = BitConverter.ToUInt16(packet, 62);
+             UInt32 attributeLength = BitConverter.ToUInt16(packet, 64);
+	     string attribute = Encoding.UTF8.GetString(packet, 66, 9);
+                    UInt32 attrFlag = BitConverter.ToUInt16(packet, 75);
+                    ushort attrTypeCode = BitConverter.ToUInt16(packet, 77);                    
+                    ushort pathSegmentType = BitConverter.ToUInt16(packet, 79);
+                    ushort pathSegmentLength = BitConverter.ToUInt16(packet, 81);
+                    string pathSegmentValue = Encoding.UTF8.GetString(packet, 83, 2);
+                    ushort nlrLength = BitConverter.ToUInt16(packet, 85);
+                    string nlrPrefix = Encoding.UTF8.GetString(packet, 87, 5);
+                    Console.Write(" Length: {0} | Type: {1} | WithDrawlRouteLength: {2} | WithdrawlRoute: {3} IP_PrifixLenght: {4} | IP_Prefix: {5} | TotalPathAttributeLength: {6} | AttributeLength: {7} | AttributeFlag: {8} | AttributeTypeCode: {9} | Attribute: {10} | pathSegmentType: {11} | pathSegmentLength: {12} | pathSegmentValue: {13} | nlrLength: {14} | nlrPrefix: {15} ", 
+                     packetLength, packetType, withdrawlRouteLength, withdrawlRoutes, ipPrefixLength, ipPrefix, totalPathAttribute,attributeLength, attrFlag, attrTypeCode,attribute, pathSegmentType,
+                     pathSegmentLength, pathSegmentValue, nlrLength, nlrPrefix);
+                    //Console.Write("OPEN MESSAGE");
+                    Console.WriteLine(" from Router : " + IPAddress.Parse(((IPEndPoint)clientSocket.RemoteEndPoint).Address.ToString()) + "\n");
+                    break;
+```
 
 Figure 8: To read the data from byte array
 
 In the following section I have shown all four different kinds of BGP message received by the socket during the software execution. In the following screen shot we can see those messages;
  
- 
- 
+![img](https://github.com/dinesh2043/BGP-Simulation-/blob/master/img2.jpg) 
  
 Figure 9: All four different message received by the sockets.
 
 ###	State Machine
 All the BGP state of the routers are assigned and handled through state machine class. All the BGP timers like; keep alive timer, connection retry timer, hold timer and time information like; connection time, keep alive time, hold time are set and handled through this class. When the timer is set in this class the respective 3 events handlers for the timers are also implemented to perform the desired operation when the timer expires.  I have also define administrative events like automatic start event and automatic stop events and event handlers to start and stop the BGP system initialization. Similarly, the TCP events like TCP connection acknowledged event, TCP connection conformed event and TCP connection failed event are implemented with their handlers. Also, all the BGP message events and their handlers like BGP open message event, BGP open message received event, BGP header error event, BGP open message error event, BGP notify message error event, BGP notify message event, BGP keep alive message event, BGP keep alive message error event, BGP update message event and BGP update message error event. All of these timers, TCP connection and BGP message events should be implemented separately for each BGP peer connection. This also has increased the complexity of the project because it is mandatory according to BGP protocol documentation. In the following code snipped we can see some of the examples of those event handlers implementation;
 
-
-
-
-
-
-
+```
+	public Timer ConnectRetryTimer {
+            get { return connectRetryTimer; }
+            set{
+                connectRetryTimer = value;
+                ConnectRetryTimer_Expires(this, new EventArgs());
+            }
+        }        
+	public Timer HoldTimer {
+            get { return holdTimer; }
+            set {
+                holdTimer = value;
+                HoldTimer_Expires(this, new EventArgs());
+            }
+        }
+	bool automaticStart;
+	public bool AutomaticStart {
+            get { return automaticStart; }
+            set {
+                automaticStart = value;
+                OnAutomaticStartEvent(this, new EventArgs());
+            }
+        }
+	public bool tcpConnectionConformedValue;
+	public bool TcpConnectionConformedValue {
+            get { return tcpConnectionConformedValue; }
+            set {
+                tcpConnectionConformedValue = value;
+                TcpConnectionConformed_Event(this, new EventArgs());
+            }
+        }
+	public bool bgpOpenMsg;
+ 	public bool BGPOpenMsg {
+            get { return bgpOpenMsg; }
+            set {
+                bgpOpenMsg = value;
+                BGPOpenMsg_Event(this, new EventArgs ());
+            }
+        }
+ 	public bool bgpOpenMsgRecived;
+ 	public bool BGPOpenMsgRecive {
+            get { return bgpOpenMsgRecived; }
+            set {
+                bgpOpenMsgRecived = value;
+                BGPOpenMsgRecived_Event(this, new EventArgs());
+            }
+        }	
+```
 
 Figure 10: Event handler’s implementation in state machine class
 
@@ -146,65 +373,232 @@ Figure 10: Event handler’s implementation in state machine class
 It is the most important class in this project as, it is the one which is responsible for maintaining as separate state and events for all 10 different routers. According to the BGP documentation it is necessary for BGP to maintain the separate FSM for each connected peers. FSM class inherits state machine class because it needs all of those events for handling BGP connection and sending BGP message according to those events and state to the connected peers. It is the heart of BGP implementation and it should have track of all timer, TCP connection, and BGP message events. All of these events should be triggered and handled according to the state of routers. Due to that reason this class can be considered as the backbone of this implementation. For example when the program starts the BGP listener/speaker and they are online the FSM should change their state to idle. Then it should give a signal to the BGP speaker to start sending TCP connection request to the listener. If the TCP connection between the listener and speaker is successful then the FSM should change their state to connect state. It also needs to find out if the connection is internal or external according to the AS information of listener and speaker. After that it should signal the BGP speaker to send the open message to the listener and change the speaker state to active. When the listener receives the open message, it should send the open and keep alive message to the listener and FSM should change its state to open conformed. Finally when the speaker receives both message then the connection is changed to established state. Since all of these connection are in different thread and they are key information for BGP protocol. Due to that reason it is stored in the static class as a global variables to access them whenever they are needed. In case of error situation FSM is also responsible for error handling and it should update the status to connected peers according to the error. In the following section of this document I will be explaining about the implementations of idle state, connect state, active state, open state, open conform state and established state of finite state machine class.
 According to the protocol automatic state event of the finite state machine is triggered when the routers are initialized and online to accept the peer connection. At this stage FSM initializes the BGP resources to perform the connection. First of all the connection retry counter is set to zero, connection retry timer is set to 2 minutes because it should be enough to initiate TCP connection to other BGP peers. BGP speaker sends the TCP connection request to the listener and listener listens to these connection request from remote peer. All the other events like; event 8, events 9-12 and events 15-28 (RFC-4271) are not processed during this state. During this stage listener will process the connection request and FSM changes the state of the connection to connect state. At this state any other events triggered will not have any effect in the local system. In the following code you can see the implementation of this particular operation; 
 
-
-
-
-
-
-
+```
+	public void IdleState() {            
+            if (autoStartEvent == true){
+                GlobalVariables.listnerConnectionState = "Idle";
+                GlobalVariables.speakerConnectionState = "Idle";
+                init_BGP.StartListner();             
+                connectRetryCounter = 0;
+                ConnectionRetryTimer_Reset();
+                init_BGP.StartListning();
+                init_BGP.StartSpeaker();
+                init_BGP.SpeakerConnection_Init();
+                autoStartEvent = false;
+            }
+        }
+ 	private void SM_OnAutomaticStartEvent(object sender, EventArgs e)
+        {
+            Console.WriteLine("Automatic Start Event is Fired here");
+            autoStartEvent = GlobalVariables.True;
+            IdleState();
+        }
+	public void ConnectionRetryTimer_Reset() {
+            if (connectionRetryFlag == true){
+                ConnectRetryTimer.Close();
+                connectionRetryFlag = false; }
+            connectRetryTimer = new System.Timers.Timer(120000);
+            connectionRetryFlag = true;
+            connectRetryTimer.Elapsed += OnConnectionRetryExpires;
+            connectRetryTimer.AutoReset = false;
+            connectRetryTimer.Enabled = true;
+        }
+	private void OnConnectionRetryExpires(object sender, ElapsedEventArgs e){
+            ConnectRetryTimer_Expires += new EventHandler(SM_StopConnectionRetryEvent);
+            connectRetryTime = e.SignalTime;
+            ConnectRetryTimer = connectRetryTimer;
+            ConnectRetryTimer_Expires -= new EventHandler(SM_StopConnectionRetryEvent);
+                    }
+```
 
 Figure 11: Idle state implementation in FSM class
+
 With the above code implementation, when the sockets are online they are detected by FSM and their connection state is set to idle. In the following screen shot you could be able to see this implementation for listener sockets when they are online.
+
+![img](https://github.com/dinesh2043/BGP-Simulation-/blob/master/img3.jpg)
  
 Figure 12: Socket information with IP address and their state information
+
 In the connect state BGP FSM waits for the TCP connection to be completed and all the others events, 1 and 3-7 are ignored. If the connection retry timer expires at this state then FSM drops the TCP connection and restarts the connection retry timer and it initiates a TCP connection and starts listening the connection request from other remote peer. But even though the connection retry timer has expired during this process but it still remains in connect state. Similarly, if the TCP connection succeeds it identifies connection type and then it resets the connection retry timer and stays in connect state. In a situation where the TCP fails, it rests the connection retry timer and continues to listen for the connection request from other BGP peers changing its connection state to active. As a response to other error events like BGP message header error, open message error, notification message error, and timer errors are handled accordingly. In the following example I am trying to show the implementation of TCP connection succeed event, connection retry timer expires event and TCP connection failed event;
 
-
-
-
-
-
+```
+	public void ConnectState() {
+   	if(tcpConnectionSucceeds == true) {
+                ConnectionRetryTimer_Reset();
+                //stays in the Connect state.
+                GlobalVariables.listnerConnectionState = "Connect";
+                tcpConnectionSucceeds = false;
+  	if (GlobalVariables.speaker_AS[GlobalVariables.speakerIpAddress] == GlobalVariables.listner_AS[GlobalVariables.listnerIpAddress]) {
+          GlobalVariables.connectionStatus = "Internal Connection";
+                    Console.WriteLine("!! With :" +    GlobalVariables.connectionStatus);
+ 	 } else {
+                    GlobalVariables.connectionStatus = "External Connection";
+                    Console.WriteLine("!! With :" + GlobalVariables.connectionStatus);
+                }     
+            }
+	    if (connectRetryExpires == true){
+                Console.WriteLine("Connection Retry Expired Connect State do stuff here !!");
+                ConnectionRetryTimer_Reset();
+                GlobalVariables.listnerConnectionState = "Connect";
+                connectRetryExpires = false;
+            } 
+            if (tcpConnectionFail == true)
+            {
+                Console.WriteLine("TCP Connection Failed Connect State[init_BGP.connCount] Stuff here !!");
+                ConnectionRetryTimer_Reset();
+                GlobalVariables.speakerConnectionState = "Active";
+                tcpConnectionFail = false;
+            }	
+``` 
 
 Figure 13: Connect state implementation of FSM class
+
 Similarly following screen shot will show all the speaker and listener sockets which are online and has a TCP connection between them and the finite state machine has updated the state information along with the information of type of connection between them.
- 
+
+![img](https://github.com/dinesh2043/BGP-Simulation-/blob/master/img4.jpg)
+
 Figure 14: Connection between the listeners and speakers with their connection type. 
 During the active state FSM checks the connection of all the BGP peers which has a successful TCP connection with each other. When the connection is successful then FSM changes the state of BGP speakers to active state. Then it signals the BGP speaker to send the open message. After that when the BGP Listener receives the open message send by BGP speaker it triggers the open message received event of FSM which changes the state information of speaker to open sent. Then in response to that event in active state FSM triggers event to listener for sending both open and keep alive message to the speakers. Other error situations are also implemented in this state but I have not explained them because I am concentrating the explanation for error free situations. It was another difficult part of my implementation to track the particular connection between connected speakers and listeners. Since I was using the asynchronous sockets for both speaker and listener which requires the connection track also in asynchronous order. According to the BGP requirements all of the listeners must handle multiple connection and in C# Socket API it was possible only through asynchronous sockets. It was the main reason to use asynchronous sockets in this project. After spending quite a long time I realised that due to asynchronous nature of the application it is better to use static global variable class to store these information in dictionary and retrieve it whenever it is necessary. As all the process of creating socket, binding socket, sending the connection request, receiving the message and sending message will be discussed in the upcoming section. But in the following code snipped I have tried to show the code where the state information assigned to the connection for different conditions in FSM;
 
-
-
-
+```
+	if(tcpConnectionSucceeds == true)
+            {
+                ConnectionRetryTimer_Reset();
+                GlobalVariables.speakerConnectionState = "Active";
+                tcpConnectionSucceeds = false;
+            }
+	if (bgpOpenMsgRecived == true)
+            {
+                BGPListner listner = new BGPListner();
+                listner.SendingOpenMsg_Speaker();
+                listner.SendingKeepAliveMsg_Speaker(); 
+	}
+	if (HoldTimer != null)
+                {
+                   KeepAliveTimer_Reset();
+                    HoldTimer_Reset();
+                }else if (HoldTimer == null)
+                {
+                    KeepAliveTimer_Reset();
+                    HoldTimer_Reset();                   
+                }
+                GlobalVariables.speakerConnectionState = "OpenSent";
+                GlobalVariables.listnerConnectionState = "OpenSent";
+            }
+```
 
 Figure 15: FSM implementation in the active connection state
+
 Even though it is few lines of code but this information has been used in other classes and quit a lot of similar information can be found in FSM. Due to similar approach in FSM class it was possible to allocate separate FSM instance for 10 listeners and 14 speakers, to track and use 14 different connection according to BGP requirements. In the following section I will show some of the open message send by the speaker that has been received by the listener. Since I am using asynchronous sockets so I do not have a control to bring the sockets online and process whole execution one by one. Which has an effect on the order of the execution all the routers will be online asynchronously and other BGP related methods are also executed randomly. But when the first requirement for the BGP setup is meet then the execution proceeds to the second requirements and so on. It can be seen in my project after application execution. In the following console output you can see state information and BGP open message send by speaker and listener;
- 
-Figure 16: BGP open message send and received by listener and speaker in connect state  
+
+![img](https://github.com/dinesh2043/BGP-Simulation-/blob/master/img5.jpg)
+
+Figure 16: BGP open message send and received by listener and speaker in connect state 
+
  FSM has another important state called open sent, which consists different kinds of error handling during error situation. But I am going to skip the explanations of those error handling and move my explanation for the normal functioning situation. Basically at this state when the BGP speaker receives the open message send by BGP listener, FSM changes the state of the speaker to open conformed state. In the following code I shown the implementation of open message received event condition and some of the error handling code at this state.
 
-
-
-
+```
+	if(bgpOpenMsgRecived == true)
+            {
+                ConnectionRetryTimer_Reset();
+                KeepAliveTimer_Reset();
+                HoldTimer_Reset();
+                GlobalVariables.listnerConnectionState = "OpenConform";
+                GlobalVariables.speakerConnectionState = "OpenConform";
+                bgpOpenMsgRecived = false;
+            }
+	if (connectRetryExpires == true  || keepAliveExpires == true || bgpNotifyMessage == true || bgpKeepAliveMessage == true ||
+               bgpUpdateMessage == true || bgpUpdateMsgError == true)
+	{
+	                ConnectionRetryTimer_Reset();
+                KeepAliveTimer_Reset();
+                connectRetryCounter++;
+                GlobalVariables.listnerConnectionState = "Idle";
+                connectRetryExpires = false;
+                keepAliveExpires = false;
+                bgpNotifyMessage = false;
+                bgpKeepAliveMessage = false;
+                bgpUpdateMessage = false;
+                bgpUpdateMsgError = false;
+            }
+        }
+	
+```
 
 Figure 17: Implementation of open sent state of FSM
+
 In the following console window I have tried to show this particular situation when the speaker receives the open message from the listener. All of these information have been dynamically generated by the program and it is printed when the execution completes the process. Same listener socket can receive message from different speaker in unpredictable sequence because in asynchronous methods request are send and processed asynchronously. In the following picture there are open message received by speakers which are not in the perfect order of speaker IP address; 
- 
+
+![img](https://github.com/dinesh2043/BGP-Simulation-/blob/master/img5.jpg)
+
 Figure 18: Output of the program execution when speaker’s state is changed to open conformed 
+
 At this point both speaker and listener are already in open conformed state. But if there is some error events like listener or speaker goes offline or connection hold time expires then the respective events in FSM is triggered. According to error occur FSM changes the state information and it performs operation in response to the error. I am going to show these two error handling in the following code;
 
-
-
+```
+	//In this state, BGP waits for a KEEPALIVE or NOTIFICATION message.
+            if (bgpAutoStop == true)
+            {
+                // sends the Notification message with a Cease,
+                ConnectionRetryTimer_Reset();
+                //releases all the BGP resources,
+                //drops the TCP connection,
+                connectRetryCounter++;
+                GlobalVariables.listnerConnectionState = "Idle";
+                bgpAutoStop = false;
+            }
+	    if(holdTimeExpires == true)
+            {
+                //sends the NOTIFICATION message with the Error Code Hold Timer Expired,
+                ConnectionRetryTimer_Reset();
+                //releases all BGP resources,
+                //drops the TCP connection,
+                connectRetryCounter++;
+                GlobalVariables.listnerConnectionState = "Idle";
+                holdTimeExpires = false;
+            }
+```
 
 Figure 19: Open conformed error situation code implementation
+
 Finally in FSM there is last connection state called established, when all of the routers in the BGP system are in the established state they are ready for update message handling. According to BGP documentation when BGP speaker receives the keep alive message send by the listener, FSM changes the connection state to established state. Similarly in the established state of the connection BGP speaker sends the update message to the listener. Also in the error situations like when the connection is established but the keep alive timers expires then the FSM should trigger the listener to send keep alive message to speaker. In the following section we will be able to see particular portion in FSM class where the state information is processed;
 
-    
-
-
+```
+	if(bgpKeepAliveMessage == true)
+            {
+                HoldTimer_Reset();
+                GlobalVariables.listnerConnectionState = "Established";
+                bgpKeepAliveMessage = false;
+            }
+ 	if(bgpUpdateMessage == true)
+            {
+                //processes the message,
+                HoldTimer_Reset();
+                GlobalVariables.listnerConnectionState = "Established";
+                bgpUpdateMessage = false;
+            }
+	if(keepAliveExpires == true)
+            {
+                //sends a keepAlive message,
+                BGPListner listner = new BGPListner();
+                listner.KeepAliveExpired();
+                //listner.SendingKeepAliveMsg_Speaker();
+                KeepAliveTimer_Reset();
+                ConnectionRetryTimer_Reset();
+                GlobalVariables.listnerConnectionState = "Idle";
+                keepAliveExpires = false;
+                connectRetryExpires = false;
+            }	
+```
 
 Figure 20: Connection Established State implementation in FSM class
+
 As I have mentioned in the above section when the speaker receives the keep alive message FSM triggers the event and updates the state information. In the following screen shot I am trying to show the output when the speaker receives Keep alive message and FSM updates its state information accordingly;
+
+![img](https://github.com/dinesh2043/BGP-Simulation-/blob/master/img5.jpg)
   
 Figure 21: Keep alive message received by Speaker and their connection state 
+
 Similarly in the error situation where the connection state is established but connection keep alive timer expires then FSM is responsible to reset the timer and trigger the listener to send keep alive message to the speaker. In the following figure I have shown the output when the timer expires and listener sends keep alive message;
   
 Figure 22: Keep alive timer expired and keep alive message send by listener 
