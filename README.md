@@ -106,6 +106,7 @@ Similarly, the message specific data like e.g. version, hold time, BGP identifie
 ```
 
 Figure 3: Codes for writing message data inside temporary buffer of the packet 
+
 #### BGP Open Message
 BGP open message class inherits the abstract message structure class to construct the open message packets in this implementation. All the related additional information of this message is supplied through this class. According to BGP documentation, I have used BGP version, AS info, BGP Identifier IP address, hold time and optimal parameter length. Open message is constructed to have a length of 40 octets. All the different data of open message are stored in different memory location by defining the slots for the byte array. Which makes it easier to track the particular data from the particular slot while handling the message. Both BGP listeners and BGP speakers use the open message constructor to send open message to each other. In the following section you can see the code which uses the supplied values to the variables and sends it to the message structure class to store the information in the byte array; 
 
@@ -311,7 +312,7 @@ Figure 8: To read the data from byte array
 
 In the following section I have shown all four different kinds of BGP message received by the socket during the software execution. In the following screen shot we can see those messages;
  
-![img](https://github.com/dinesh2043/BGP-Simulation-/blob/master/img2.jpg) 
+ ![img](https://github.com/dinesh2043/BGP-Simulation-/blob/master/img2.jpg) 
  
 Figure 9: All four different message received by the sockets.
 
