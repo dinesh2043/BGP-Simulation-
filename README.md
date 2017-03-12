@@ -798,103 +798,364 @@ Figure 27: Autonomous systems and their connection
 First of all I have initialized 10 instances of listener socket class to define 10 different IP address and port number. While defining these two information I have already divided the listeners IP address according to different AS IP prefix. The code which binds the socket is inside the loop so that I can create 10 listener sockets. This portion of the implantation can be seen in the following code;
 
 ```
+	public static BGPListner[] bgpListner = new BGPListner[10];
+	public void StartListner() {            
+            for (int i = 0; i < 10; i++){                
+                bgpListner[i] = new BGPListner();
+                if (i < 3){
+                    AS = GlobalVariables.AS1;
+                    GlobalVariables.listnerConAnd_AS.TryAdd((ushort)i, AS);
+                    bgpListner[i].BindListner(GlobalVariables.as1_IP_peifix + i, GlobalVariables.listnerPortNumber, i);                 
+		    GlobalVariables.listner_AS.TryAdd(GlobalVariables.as1_IP_peifix + i, AS);
+                }else if (i >2 && i < 7){
+                    AS = GlobalVariables.AS2;
+		  }
+		GlobalVariables.listnerConAnd_AS.TryAdd((ushort)i, AS);
+                    bgpListner[i].BindListner(GlobalVariables.as2_IP_Prefix + i, GlobalVariables.listnerPortNumber, i);                 
+		    GlobalVariables.listner_AS.TryAdd(GlobalVariables.as2_IP_Prefix + i, AS);                 
+                } else if (i> 6 && i<10){
+                    AS = GlobalVariables.AS3;
+                    GlobalVariables.listnerConAnd_AS.TryAdd((ushort)i, AS);
+                    bgpListner[i].BindListner(GlobalVariables.as3_IP_Prefix + i, GlobalVariables.listnerPortNumber, i);                 
+		    GlobalVariables.listner_AS.TryAdd(GlobalVariables.as3_IP_Prefix + i, AS);                    
+                }          
+                //recient computers can handle 500 connections
+            }
 
 ```
 Figure 28: Listener socket initialization process
+
 When this code is executed all the listener sockets are created and they will be online to listen and accept the connection request send by the speaker. Following console output shows the result when the application is executed; 
 
- Figure 29: Output when the listener sockets are online
+![img](https://github.com/dinesh2043/BGP-Simulation-/blob/master/img10.jpg)
+
+Figure 29: Output when the listener sockets are online
  
 To address the project requirement I have initialized the 14 instance of speaker sockets to bind it to its proper IP and port address. It has followed similar steps as in listener for its implantation but it has 14 different sockets because it needs to initiate 14 different connection request. In the following section of the code I am showing its implementation in the project;
 
-
-
-
-
-
-
-
-
-
-
+```
+	public static BGPSpeaker[] bgpSpeaker = new BGPSpeaker[14];
+	public void StartSpeaker() {
+        for (int k = 0; k < 10; k++){
+                bgpSpeaker[m] = new BGPSpeaker();                
+                if (k < 3) {
+                    AS = GlobalVariables.AS1;
+                    if( k == 2){
+			bgpSpeaker[m].BindSpeaker(GlobalVariables.as1_IP_peifix + k, GlobalVariables.speakerPortNumber, m);            
+			GlobalVariables.speaker_AS.TryAdd(GlobalVariables.as1_IP_peifix + k, AS);                       
+                        m++;
+                        bgpSpeaker[m] = new BGPSpeaker();                     
+			bgpSpeaker[m].BindSpeaker(GlobalVariables.as1_IP_peifix + k, GlobalVariables.speakerPortNumber+1, m);          
+                    }else {
+			bgpSpeaker[m].BindSpeaker(GlobalVariables.as1_IP_peifix + k, GlobalVariables.speakerPortNumber, m);             
+			GlobalVariables.speaker_AS.TryAdd(GlobalVariables.as1_IP_peifix + k, AS);                      
+                    }                  
+                }else if (k >2 && k < 7) {
+                    AS = GlobalVariables.AS2;
+                    if ( k == 3){                       
+		    bgpSpeaker[m].BindSpeaker(GlobalVariables.as2_IP_Prefix + k, GlobalVariables.speakerPortNumber, m);                 
+		    GlobalVariables.speaker_AS.TryAdd(GlobalVariables.as2_IP_Prefix + k, AS);
+                        m++;
+                        bgpSpeaker[m] = new BGPSpeaker();
+                        bgpSpeaker[m].BindSpeaker(GlobalVariables.as2_IP_Prefix + k, GlobalVariables.speakerPortNumber + 1, m);
+		   }else if ( k == 6){                     
+			bgpSpeaker[m].BindSpeaker(GlobalVariables.as2_IP_Prefix + k, GlobalVariables.speakerPortNumber, m);
+                        GlobalVariables.speaker_AS.TryAdd(GlobalVariables.as2_IP_Prefix + k, AS);
+                        m++;
+                        bgpSpeaker[m] = new BGPSpeaker();                     
+			bgpSpeaker[m].BindSpeaker(GlobalVariables.as2_IP_Prefix + k, GlobalVariables.speakerPortNumber + 1, m);
+                        m++;
+                        bgpSpeaker[m] = new BGPSpeaker();                       
+			bgpSpeaker[m].BindSpeaker(GlobalVariables.as2_IP_Prefix + k, GlobalVariables.speakerPortNumber + 2, m);
+                    }
+      		 else if (k == 4 || k == 5) {                       
+		 	bgpSpeaker[m].BindSpeaker(GlobalVariables.as2_IP_Prefix + k, GlobalVariables.speakerPortNumber, m);
+			GlobalVariables.speaker_AS.TryAdd(GlobalVariables.as2_IP_Prefix + k, AS);
+                    }
+                } else if (k>6 && k < 9) {
+                    	AS = GlobalVariables.AS3;
+            		bgpSpeaker[m].BindSpeaker(GlobalVariables.as3_IP_Prefix + k, GlobalVariables.speakerPortNumber, m);
+			GlobalVariables.speaker_AS.TryAdd(GlobalVariables.as3_IP_Prefix + k, AS);
+                }else if (k == 9){
+			AS = GlobalVariables.AS3;
+                   	bgpSpeaker[m].BindSpeaker(GlobalVariables.as3_IP_Prefix + k, GlobalVariables.speakerPortNumber, m);
+                    	GlobalVariables.speaker_AS.TryAdd(GlobalVariables.as3_IP_Prefix + k, AS);                    
+                }
+                m++;
+            }
+        }	
+```
 
 Figure 30: Speaker socket initialization
 When these sockets are initialized and the code is executed the console window will have the following output as its result;
- 
+
+![img](https://github.com/dinesh2043/BGP-Simulation-/blob/master/img11.jpg)
+
 Figure 31: Speaker initialization output result
+
 After all of the listener and speaker are online the next step is to make a connection request from the speaker. As the requirement of the project there should be 14 different connection request with two external connection request. It was another difficult task to track the particular connection between the listener and the speaker so I have stored it in global variable. I have achieved this by the help of following lines of codes;
 
+```
+	public void SpeakerConnection_Init() {
+            for (int k = 0; k < 10; k++){               
+                if (k < 3) {               
+                    GlobalVariables.speakerConAnd_AS.TryAdd((ushort)n, GlobalVariables.AS1);
+                    GlobalVariables.connCountListner = n;
+                    if(k == 2){
+                        bgpSpeaker[n].Connect(GlobalVariables.as2_IP_Prefix + (k + 1), GlobalVariables.listnerPortNumber, k, k+1);
+                        GlobalVariables.conAnd_Listner.TryAdd(n, GlobalVariables.as2_IP_Prefix + (k + 1));
+                        GlobalVariables.conAnd_Speaker.TryAdd(n, GlobalVariables.as1_IP_peifix + k);
+                        SendOpenMessageToListner(n);
+                        n++;
+                        GlobalVariables.speakerConAnd_AS.TryAdd((ushort)n, GlobalVariables.AS1);
+                        bgpSpeaker[n].Connect(GlobalVariables.as1_IP_peifix + (k -2), GlobalVariables.listnerPortNumber, k, k-2);
+                        GlobalVariables.conAnd_Listner.TryAdd(n, GlobalVariables.as1_IP_peifix + (k - 2 ));
+                        //bgpSpeaker[k].Connect();
+                        GlobalVariables.conAnd_Speaker.TryAdd(n, GlobalVariables.as1_IP_peifix + k);
+                        SendOpenMessageToListner(n);                       
+                    }else{
+                        bgpSpeaker[n].Connect(GlobalVariables.as1_IP_peifix + (k + 1), GlobalVariables.listnerPortNumber, k, k+1);
+                        GlobalVariables.conAnd_Listner.TryAdd(n, GlobalVariables.as1_IP_peifix + (k + 1));
+                        GlobalVariables.conAnd_Speaker.TryAdd(n, GlobalVariables.as1_IP_peifix + k);
+                        SendOpenMessageToListner(n);
+                    }
+                }
+		else if (k > 2 && k < 7){                  
+                    GlobalVariables.speakerConAnd_AS.TryAdd((ushort)n, GlobalVariables.AS2);                   
+                    GlobalVariables.connCountListner = n;
+                    if(k == 3){
+                        bgpSpeaker[n].Connect(GlobalVariables.as2_IP_Prefix + (k + 1), GlobalVariables.listnerPortNumber, k, k+1);
+			                        GlobalVariables.conAnd_Listner.TryAdd(n, GlobalVariables.as2_IP_Prefix + (k + 1));
+                        GlobalVariables.conAnd_Speaker.TryAdd(n, GlobalVariables.as2_IP_Prefix + k);
+                        SendOpenMessageToListner(n);
+                        n++;
+                        GlobalVariables.speakerConAnd_AS.TryAdd((ushort)n, GlobalVariables.AS2);
+                        bgpSpeaker[n].Connect(GlobalVariables.as2_IP_Prefix + (k + 2), GlobalVariables.listnerPortNumber, k, k+2);
+                        GlobalVariables.conAnd_Listner.TryAdd(n, GlobalVariables.as2_IP_Prefix + (k + 2));
+                        GlobalVariables.conAnd_Speaker.TryAdd(n, GlobalVariables.as2_IP_Prefix + k);
+                        SendOpenMessageToListner(n);                      
+                    } else if (k == 6) {
+                        bgpSpeaker[n].Connect(GlobalVariables.as3_IP_Prefix + (k + 1), GlobalVariables.listnerPortNumber, k, k+1);
+                        GlobalVariables.conAnd_Listner.TryAdd(n, GlobalVariables.as3_IP_Prefix + (k + 1));
+                        GlobalVariables.conAnd_Speaker.TryAdd(n, GlobalVariables.as2_IP_Prefix + k);
+                        SendOpenMessageToListner(n);
+                                                n++;
+                        GlobalVariables.speakerConAnd_AS.TryAdd((ushort)n, GlobalVariables.AS2);
+                        bgpSpeaker[n].Connect(GlobalVariables.as2_IP_Prefix + (k -2), GlobalVariables.listnerPortNumber, k, k-2);
+                        GlobalVariables.conAnd_Listner.TryAdd(n, GlobalVariables.as2_IP_Prefix + (k - 2));
+                        GlobalVariables.conAnd_Speaker.TryAdd(n, GlobalVariables.as2_IP_Prefix + k);
+                        SendOpenMessageToListner(n);
+                        //SendOpenMessageToListner(n);
+                        n++;
+                        GlobalVariables.speakerConAnd_AS.TryAdd((ushort)n, GlobalVariables.AS2);
+                        bgpSpeaker[n].Connect(GlobalVariables.as2_IP_Prefix + (k - 3), GlobalVariables.listnerPortNumber, k, k-3);
+                        GlobalVariables.conAnd_Listner.TryAdd(n, GlobalVariables.as2_IP_Prefix + (k - 3));
+                        GlobalVariables.conAnd_Speaker.TryAdd(n, GlobalVariables.as2_IP_Prefix + k);
+                        SendOpenMessageToListner(n);
+                    }
+                    else if (k == 4 || k == 5)
+                    {
+                        bgpSpeaker[n].Connect(GlobalVariables.as2_IP_Prefix + (k + 1), GlobalVariables.listnerPortNumber, k, k+1);
+                        
+                        GlobalVariables.conAnd_Listner.TryAdd(n, GlobalVariables.as2_IP_Prefix + (k + 1));
+                        GlobalVariables.conAnd_Speaker.TryAdd(n, GlobalVariables.as2_IP_Prefix + k);
+                        SendOpenMessageToListner(n);
+                    }
+                    //SendOpenMessageToListner(n);
+                }
 
-
-
-
-
-
-
-
-
-
-
-
-
+```
 Figure 32: Speakers connection request implementation
+
 As a result of above mentioned connection code implementation all listeners and speakers will be connected in 14 different connection as explained in initialization of speaker, listener and AS section. Due to the asynchronous nature of the sockets and its connection in the following figure we can see that some routers are still getting connected and some has already send the open message. This kind of result can be seen in other section also. But if I have done 10 different console application for individual routers then this problem could have been fixed. In the following figure I have shown this result;
+
+![img](https://github.com/dinesh2043/BGP-Simulation-/blob/master/img12.jpg)
  
 Figure 33: Connection information between the listener and the speaker with its connection type
 
 ### Implementing Routing Table
 As stated on BGP protocol when all the listener and speaker were online, connected and connection state was established with FSM individual connection state. The project was ready for routing table implementation for individual AS. Since all the routers were in same console application that’s why it was easy to save all routers with established connection state in the dictionary of the global variable class. According to the BGP protocol, an AS keeps the routing information of the internal BGP peers and its external peer routing information. My implementation satisfies this condition in all 3 AS’s. I will show that in the upcoming sections. In the following code you can see the formation of routing table information retrieving the values like; connection number, IP address, AS number, next hop address, and connection type. The actual implementation about setting those values will be discussed in update message handling section. I am trying to show this process in the following code;
 
-
-
-
-
-
-
-
+```
+	public static DataTable GetTable(){
+            GlobalVariables.conSpeakerAs_ListnerAs.Clear();
+            // Here we create a DataTable with four columns.
+            DataTable table = new DataTable();
+            table.Columns.Add("Connection", typeof(int));
+            table.Columns.Add("Network", typeof(string));
+            table.Columns.Add("AS_N", typeof(int));
+            table.Columns.Add("NextHop", typeof(string));
+            table.Columns.Add("AS_NH", typeof(int));
+            table.Columns.Add("IGP/EGP", typeof(int));
+            foreach (KeyValuePair<int, string> pair in GlobalVariables.conAnd_Listner){
+                try { 
+                if (GlobalVariables.listner_AS[pair.Value] == GlobalVariables.speaker_AS[GlobalVariables.conAnd_Speaker[pair.Key]]){
+                    table.Rows.Add(pair.Key, GlobalVariables.conAnd_Speaker[pair.Key], GlobalVariables.speaker_AS[GlobalVariables.conAnd_Speaker[pair.Key]],
+                      pair.Value, GlobalVariables.listner_AS[pair.Value], 0);
+                     Tuple<string, ushort, string, ushort> conSpeakerAs_ListnerAs = new Tuple<string, ushort, string, ushort>(GlobalVariables.conAnd_Speaker[pair.Key],                     GlobalVariables.speaker_AS[GlobalVariables.conAnd_Speaker[pair.Key]], pair.Value, GlobalVariables.listner_AS[pair.Value]);
+	                                 GlobalVariables.conSpeakerAs_ListnerAs.Add(pair.Key, conSpeakerAs_ListnerAs);
+                }else {
+                    table.Rows.Add(pair.Key, GlobalVariables.conAnd_Speaker[pair.Key], GlobalVariables.speaker_AS[GlobalVariables.conAnd_Speaker[pair.Key]],
+                        pair.Value, GlobalVariables.listner_AS[pair.Value], 1);
+                    Tuple<string, ushort, string, ushort> conSpeakerAs_ListnerAs = new Tuple<string, ushort, string, ushort>(GlobalVariables.conAnd_Speaker[pair.Key],                      GlobalVariables.speaker_AS[GlobalVariables.conAnd_Speaker[pair.Key]], pair.Value, GlobalVariables.listner_AS[pair.Value]);
+                    GlobalVariables.conSpeakerAs_ListnerAs.Add(pair.Key, conSpeakerAs_ListnerAs);
+                }
+                }catch(Exception e) {
+                    Console.WriteLine(e.ToString());
+                }                 
+            }         
+            return table;
+        }	     
+```
 
 Figure 34: Complete routing table implementation
 
 To get the routing table first of all we need to wait until all the connection are in established state. After that we call the update method to set adjacent RIB Out, path attribute, NLR, and path segment values. Then as we call the respective method for different AS’s it show’s their routing table information. This implementation is in program class within the forever loop because the program should facilitate this feather for ever.  Since it is handled by the administrator and he should enforce local policy any time. To enforce local policy I have implemented update feather which helps to update policies according to AS needs. But path vector matrix and trust voting implementation are missing which might be most important recommendation for further development. In the following figure I am going to show this update and routing table display method implementation;   
 
-
-
-
+```
+	while (true){
+     //Console.WriteLine("Type help for command info:"); // Prompt//Console.WriteLine("Type commands for further execution:"); // Prompt
+                string line = Console.ReadLine(); // Get string from user
+                if (line == "help") // Check string{
+                    Console.WriteLine("Type 'as1' or 'as2' or 'as3' to see routing table info" );
+                }
+                if (line == "as1") {                   
+                    bgpRoutes.DisplayDataAS1();
+                }
+                if (line == "as2"){
+                    bgpRoutes.DisplayDataAS2();
+                }
+          	if (line == "as3"){
+                    bgpRoutes.DisplayDataAS3();
+                }
+                if(line == "update") {
+                    GlobalVariables.data = Routes.GetTable();
+                    Console.WriteLine("Local Policy For AS1, AS2 and AS3 is UPDATED");
+                    createUpdate.adj_RIB_Out();
+                    createUpdate.pathAttribute();
+                    createUpdate.networkLayerReachibility();
+                    createUpdate.pathSegment();
+                }
+         }      	
+```
 
 Figure 35: Update and AS info implementation in program class
 
 In the following figure you can see that first I have updated the local policy and then used “as2” to view routing table information of AS2.
+
+![img](https://github.com/dinesh2043/BGP-Simulation-/blob/master/img13.jpg)
  
 Figure 36: update command and as2 command with their output
 
 ### Update Message Handling
 This was another complicated implementation in this project because all the parameters of the update message should be dynamic according to those 14 different connection. BGP speakers are the one who is responsible to enforce the routing policy within the AS. This implementation also needs to have the track of external connection between two AS and send the reachability information accordingly to the internal BGP peer. There is also the implementation to store Adj-RIB-Out, NLRI, path attribute, path segment and withdrawn routes information in global variables. But in this section of this document, I will be showing the update message handling in AS3 only. In the following code we can see that I have retrieved all the necessary information like NRLI, path segment, path attribute and adjacent-RIB-Out. Then I have send an update message to the listener using update message class. In the following figure we will be seeing the implementation of update message handling of AS3;
 
-
-
-
-
-
+```
+	case 4:
+                            nlri = GlobalVariables.NLRI[entry.Key];
+                            pathSegment = GlobalVariables.pathSegment[entry.Key];
+                            //pathAttribute is the combination of attribute length, attribute(origin), attrFlag and attrTypeCode
+                            pathAttribute = GlobalVariables.pathAttribute[entry.Key];
+                            //Tuple consists of connection count, network, N_AS, Next_Hop, NH_AS, EGP/IGP, AS_prefix
+                            adj_RIB_Out = GlobalVariables.Adj_RIB_Out[entry.Key];
+                           if (GlobalVariables.withdrawnRoutes.ContainsKey(3))  {
+                                Tuple<string, int> withdrawlInfo = GlobalVariables.withdrawnRoutes[3];
+                                GlobalVariables.withdrawl_IP_Address = withdrawlInfo.Item1;
+                                GlobalVariables.withdrawl_Length = withdrawlInfo.Item2;
+                            } else {
+                                GlobalVariables.withdrawl_IP_Address = "";
+                                GlobalVariables.withdrawl_Length = 0;
+                            }                         
+                                updatePacket = new UpdateMessage((UInt16)GlobalVariables.withdrawl_Length, GlobalVariables.withdrawl_IP_Address,(ushort)adj_RIB_Out.Item7.Length,
+                               adj_RIB_Out.Item7, 24, (UInt32)pathAttribute.Item1, (UInt32)pathAttribute.Item3, (ushort)pathAttribute.Item4, pathAttribute.Item2, 1,
+                               (ushort)pathSegment.Item1, pathSegment.Item2, (ushort)nlri.Item1, nlri.Item2);
+			                                   foreach (KeyValuePair<int, Tuple<string, ushort, string, ushort>> speakerListner in GlobalVariables.conSpeakerAs_ListnerAs)  {
+                                if ((adj_RIB_Out.Item4 == speakerListner.Value.Item3) && (speakerListner.Value.Item4 == 3) && (speakerListner.Value.Item2 == 3)) {
+                    foreach (KeyValuePair<int, Socket> listner in GlobalVariables.listnerSocket_Dictionary) {
+                                if ((speakerListner.Value.Item3 == "" + IPAddress.Parse(((IPEndPoint)listner.Value.LocalEndPoint).Address.ToString())) &&
+                                            (speakerListner.Value.Item1 == "" + IPAddress.Parse(((IPEndPoint)listner.Value.RemoteEndPoint).Address.ToString())))
+                                        {
+                         bgpListner.SendSpeaker(updatePacket.BGPmessage, listner.Value, "Update");
+                                            FSM.BGPUpdateMsgSent(GlobalVariables.True);
+                                        }
+                                    }
+                                }
+                                if ((adj_RIB_Out.Item4 == speakerListner.Value.Item1) && (speakerListner.Value.Item4 == 3) && (speakerListner.Value.Item2 == 3)) {
+                           	foreach (KeyValuePair<int, Socket> speaker in GlobalVariables.SpeakerSocket_Dictionary) {
+                                        if ((speakerListner.Value.Item1 == "" + IPAddress.Parse(((IPEndPoint)speaker.Value.LocalEndPoint).Address.ToString())) &&
+                                            (speakerListner.Value.Item3 == "" + IPAddress.Parse(((IPEndPoint)speaker.Value.RemoteEndPoint).Address.ToString()))) {
+                      bgpSpeaker.SendListner(updatePacket.BGPmessage, speaker.Value, "Update");
+                                            FSM.BGPUpdateMsgSent(GlobalVariables.True);
+                                        }					                                    }
+                                }
+                            }                            
+                            break;	
+```
 
 Figure 37: Update message handling for AS3 in update message handling class
+
 First of all in the implementation we should update the local policies to get routing table information by typing “update” command in console window. Then if we type “as3” we will be able to see the routing table of AS3. Then if we give a command “updateAS3” then it sends the update message to other routers. Withdrawn route field is empty because all the routers are online. In the following figure I have shown this implementation.
+
+![img](https://github.com/dinesh2043/BGP-Simulation-/blob/master/img14.jpg)
  
 Figure 38: AS3 routing table and respective update message in same AS3
+
 ### Close Router
+
 This class is created to shut down the TCP connection between the BGP peer. Actually in this implementation there are 10 routers with 24 sockets and 14 TCP connection. May be this numbers also will define little bit about the sensitivity of its implementation. It was another difficult task of this project implementation. Actually I ran into one tricky problem to track the particular connection of the specific router when it was supposed to shut down.  But after having the IP address of the router which is shutdown it was possible to track the connection and implement the notification message handling. According to BGP document all of these 14 connection should be at established state for sending the notification message. Since, when the socket is initialized and functional in one thread and if we try to shut it down from remote thread it throws the exception. Due to that reason I haven’t shut down the actual router but I have removed all the stored information of that particular router from global variable dictionary and the TCP connection is not actually closed. While using the dictionary in the global variable class I faced a problem where the same dictionary was accessed by the multiple threads of application and I was having problems to achieve this feature. After spending some time with this problem I learned that in C# there is a thread safe dictionary called concurrent dictionary. This concurrent dictionary of C# made this whole project possible to implement. The process to achieve this feature can be seen in the following code. Where I have removed all the stored information of that IP address from the global variable class.
 
-
-
-
-
-
-
-
-
-
-
+```
+	public void closeSpeaker(string ipAddress) {           
+            foreach (KeyValuePair<int, Socket> speaker in GlobalVariables.SpeakerSocket_Dictionary){
+                try {
+                    if (ipAddress == "" + IPAddress.Parse(((IPEndPoint)speaker.Value.LocalEndPoint).Address.ToString())){
+                        Console.WriteLine("Shutdown Speaker with IP: " + 
+			IPAddress.Parse(((IPEndPoint)speaker.Value.LocalEndPoint).Address.ToString()));
+                        SpeakerSocket_DictionaryCopy.Add(speaker.Key, speaker.Value);
+                        // Release the socket.                       
+                        GlobalVariables.speaker_AS.TryRemove("" + 
+			IPAddress.Parse(((IPEndPoint)speaker.Value.LocalEndPoint).Address.ToString()), out value);                    
+                        GlobalVariables.conAnd_Speaker.TryRemove(speaker.Key, out stringValue);
+                        GlobalVariables.conAnd_Listner.TryRemove(speaker.Key, out stringValue);
+                        GlobalVariables.speakerConAnd_AS.TryRemove((ushort)speaker.Key, out value);
+                        GlobalVariables.listnerConAnd_AS.TryRemove((ushort)speaker.Key, out value);
+                        tempAS = value;
+                    }
+                }catch(Exception ex){
+                    Console.WriteLine(ex.ToString());
+                }
+            }
+	foreach (KeyValuePair<int, Socket> speakercopy in SpeakerSocket_DictionaryCopy){              
+		GlobalVariables.SpeakerSocket_Dictionary.TryRemove(speakercopy.Key, out socket);                
+            }
+    }
+    public void closeListner(string ipAddress) {          
+            foreach (KeyValuePair<int, Socket> listner in GlobalVariables.listnerSocket_Dictionary){
+                try { 
+                if (ipAddress == "" + IPAddress.Parse(((IPEndPoint)listner.Value.LocalEndPoint).Address.ToString())){
+                    Console.WriteLine("Shutdown listner with IP: " + 
+		    IPAddress.Parse(((IPEndPoint)listner.Value.LocalEndPoint).Address.ToString()));
+                    // Release the socket.
+                    listnerSocket_DictionaryCopy.Add(listner.Key, listner.Value);
+                    GlobalVariables.listner_AS.TryRemove("" + 
+		    IPAddress.Parse(((IPEndPoint)listner.Value.LocalEndPoint).Address.ToString()), out value);
+                    GlobalVariables.conAnd_Listner.TryRemove(listner.Key, out stringValue);
+                    GlobalVariables.conAnd_Speaker.TryRemove(listner.Key, out stringValue);
+                    GlobalVariables.listnerConAnd_AS.TryRemove((ushort)listner.Key, out value);
+                    GlobalVariables.speakerConAnd_AS.TryRemove((ushort)listner.Key, out value);
+                    }
+                } catch (Exception ex) {
+                    Console.WriteLine(ex.ToString());
+                }
+            }
+            foreach (KeyValuePair<int, Socket> listnercopy in listnerSocket_DictionaryCopy) {
+                GlobalVariables.listnerSocket_Dictionary.TryRemove(listnercopy.Key, out socket);
+            }
+        }
+```
 
 Figure 39: Shutting down listener and speaker
+
 Using the above mentioned implementation I was able to provide this feature to close the routers in all three different AS’s. But actually I have written to close three routers with IP addresses “127.1.0.0, 127.2.0.5, and 127.3.0.9”. Because if I close the routers which has the connection with external AS router then some other router needs to initiate external connection to the router of other AS’s. Due to its complexity I have skipped that part in this implementation but it should be implemented in the further development. In the existing implementation if we type any of the above mentioned IP address e.g. “127.1.0.0” in console and press enter then it closes that particular router. In the following section we can see the result when this particular router is closed and then BGP speaker sends the notification message to its peer. Then if we type “updateAS1” command BGP speaker sends the update message with the withdrawn route information to its peer. But we need to update the routing table first and send the updateAS1 command to the system. It is shown in the following figure;
    
 Figure 40: Notify and update message when the router is closed
@@ -902,14 +1163,7 @@ Figure 40: Notify and update message when the router is closed
 ###	Program class
 It is the entry point for the execution of the whole project and its execution starts from main method of this class. Due to that reason I have initiated FSM class inside the main method. Also the automatic start event of the FSM class is triggered to start all the speakers and listeners initialization and connection process. When the TCP connection is successful, FSM will execute other BGP messaging process as I have mentioned in the above sections of this document. Similarly when the BGP connection is established routes and update message handling class is also initialized to implement them in the forever loop. All the necessary command are also inside this forever loop because those commands should be usable for all the time after the program execution. All the sockets initialization is also done through this main method to make them responsive all the time after creating them. This simple implementation is shown in the following code. 
  
-
-
-
-
-
-
-
-
+ ![img](https://github.com/dinesh2043/BGP-Simulation-/blob/master/img15.jpg)
 
 
 Figure 41: Program class implementation
@@ -918,15 +1172,64 @@ Figure 41: Program class implementation
 
 Due to all of the above explained reasons the project required a static global variable class to store all the required variables values. The most important concurrent dictionary I have used to store these key information’s are speaker_AS, listner_AS, conAnd_Listner, con_And_Speaker, speakerConAnd_AS, listnerConAnd_AS, listnerSocket_Dictionary, speakerSocket_Dictionary, conSpeakerAs_ListnerAs, Adj_RIB_Out, NLRI, pathAttribute, withdrawlRoutes, pathSegment, interASConIP etc.  In the following code example I am showing the initialization of all of these global dictionary; 
 
-        
-
-
-
-
+```
+	public static void Main(string[] args){         
+            Console.WriteLine("Run the BGP simulator");
+            FinateStateMachine FSM_Server = new FinateStateMachine();
+             FSM_Server.Timers();
+            GlobalVariables.True = true;
+            //FSM.TcpConnectionConformed(true);
+            FSM_Server.StartBGPConnectionMethod(GlobalVariables.True);
+            Routes bgpRoutes = new Routes();          
+            UpdateMessageHandling createUpdate = new             UpdateMessageHandling();
+            CloseRouter close = new CloseRouter();
+            while (true){
+                string line = Console.ReadLine(); // Get string from user
+                if (line == "help") // Check string {
+                    Console.WriteLine("Type 'as1' or 'as2' or 'as3' to see routing table info" );
+                }
+		if (line == "as1") {                   
+                    bgpRoutes.DisplayDataAS1();
+                }
+                if (line == "as2") {
+                    bgpRoutes.DisplayDataAS2();
+                }
+                if (line == "as3")
+                {
+                    bgpRoutes.DisplayDataAS3();
+                }
+		             if(line == "update")
+                {
+                    GlobalVariables.data = Routes.GetTable();
+                    Console.WriteLine("Local Policy For AS1, AS2 and AS3 is UPDATED");
+                    createUpdate.adj_RIB_Out();
+                    createUpdate.pathAttribute();
+                    createUpdate.networkLayerReachibility();
+                    createUpdate.pathSegment();
+                }
+                if(line == "updateAS1")
+                {
+                    createUpdate.sendUpdateMsg(1);
+                }
+                if (line == "updateAS2")
+                {
+                    createUpdate.sendUpdateMsg(2);
+                    createUpdate.sendUpdateMsg(3);
+                }
+                if (line == "updateAS3")
+                {
+                    createUpdate.sendUpdateMsg(4);
+                }                
+                if(line == "127.1.0.0")
+                {
+                    close.CloseSpeakerListner(line);
+                }              
+            }
+```
 
 Figure 42: Global dictionary declaration in global variable class
 
-
 ### Further improvement
+
 All the basic implementation of the BGP protocol have been implemented in this project. But some of the tricky portion like implementing path vector, trust between the routers, routes aggregation, all the different BGP error handling are still missing in this project. The implementation of sending actual IPV4 packet with the destination address and the actual part where routers of AS uses BGP protocol to route the packet to the destination address is also missing. In the same way as I have mentioned above the dynamic initialization of sockets according to the numbers of router in mesh topology might be important part improve the project. I have written the notification message to handle all the error situation and FSM is also ready to trigger those necessary events but I have not implemented for all of those situation. Similarly the portion where we need to shut down the router from the foreign host of same AS, has not been implemented exactly according to the BGP documentation. These are the most important sectors for the further development of this project.
 
