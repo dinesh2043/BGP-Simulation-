@@ -1157,21 +1157,14 @@ This class is created to shut down the TCP connection between the BGP peer. Actu
 Figure 39: Shutting down listener and speaker
 
 Using the above mentioned implementation I was able to provide this feature to close the routers in all three different AS’s. But actually I have written to close three routers with IP addresses “127.1.0.0, 127.2.0.5, and 127.3.0.9”. Because if I close the routers which has the connection with external AS router then some other router needs to initiate external connection to the router of other AS’s. Due to its complexity I have skipped that part in this implementation but it should be implemented in the further development. In the existing implementation if we type any of the above mentioned IP address e.g. “127.1.0.0” in console and press enter then it closes that particular router. In the following section we can see the result when this particular router is closed and then BGP speaker sends the notification message to its peer. Then if we type “updateAS1” command BGP speaker sends the update message with the withdrawn route information to its peer. But we need to update the routing table first and send the updateAS1 command to the system. It is shown in the following figure;
+
+![img](https://github.com/dinesh2043/BGP-Simulation-/blob/master/img15.jpg)
    
 Figure 40: Notify and update message when the router is closed
 
-###	Program class
+### Program class
 It is the entry point for the execution of the whole project and its execution starts from main method of this class. Due to that reason I have initiated FSM class inside the main method. Also the automatic start event of the FSM class is triggered to start all the speakers and listeners initialization and connection process. When the TCP connection is successful, FSM will execute other BGP messaging process as I have mentioned in the above sections of this document. Similarly when the BGP connection is established routes and update message handling class is also initialized to implement them in the forever loop. All the necessary command are also inside this forever loop because those commands should be usable for all the time after the program execution. All the sockets initialization is also done through this main method to make them responsive all the time after creating them. This simple implementation is shown in the following code. 
  
- ![img](https://github.com/dinesh2043/BGP-Simulation-/blob/master/img15.jpg)
-
-
-Figure 41: Program class implementation
-
-###	Global variables class
-
-Due to all of the above explained reasons the project required a static global variable class to store all the required variables values. The most important concurrent dictionary I have used to store these key information’s are speaker_AS, listner_AS, conAnd_Listner, con_And_Speaker, speakerConAnd_AS, listnerConAnd_AS, listnerSocket_Dictionary, speakerSocket_Dictionary, conSpeakerAs_ListnerAs, Adj_RIB_Out, NLRI, pathAttribute, withdrawlRoutes, pathSegment, interASConIP etc.  In the following code example I am showing the initialization of all of these global dictionary; 
-
 ```
 	public static void Main(string[] args){         
             Console.WriteLine("Run the BGP simulator");
@@ -1225,6 +1218,38 @@ Due to all of the above explained reasons the project required a static global v
                     close.CloseSpeakerListner(line);
                 }              
             }
+``` 
+
+Figure 41: Program class implementation
+
+### Global variables class
+
+Due to all of the above explained reasons the project required a static global variable class to store all the required variables values. The most important concurrent dictionary I have used to store these key information’s are speaker_AS, listner_AS, conAnd_Listner, con_And_Speaker, speakerConAnd_AS, listnerConAnd_AS, listnerSocket_Dictionary, speakerSocket_Dictionary, conSpeakerAs_ListnerAs, Adj_RIB_Out, NLRI, pathAttribute, withdrawlRoutes, pathSegment, interASConIP etc.  In the following code example I am showing the initialization of all of these global dictionary; 
+
+```
+	        //connectCount and Listner
+        //ConcurrentDictionary is used for the thread safty
+        public static ConcurrentDictionary<string, ushort> speaker_AS = new ConcurrentDictionary<string, ushort>();
+        public static ConcurrentDictionary<string, ushort> listner_AS = new ConcurrentDictionary<string, ushort>();
+        public static ConcurrentDictionary<int, string> conAnd_Listner = new ConcurrentDictionary<int, string>();
+        public static ConcurrentDictionary<int, string> conAnd_Speaker = new ConcurrentDictionary<int, string>();
+        
+        public static ConcurrentDictionary<ushort, ushort> speakerConAnd_AS = new ConcurrentDictionary<ushort, ushort>();
+        public static ConcurrentDictionary<ushort, ushort> listnerConAnd_AS = new ConcurrentDictionary<ushort, ushort>();
+        public static ConcurrentDictionary<int, Socket> listnerSocket_Dictionary = new ConcurrentDictionary<int, Socket>();
+        public static ConcurrentDictionary<int, Socket> SpeakerSocket_Dictionary = new ConcurrentDictionary<int, Socket>();
+	//UPDATE Variables
+        public static Dictionary<int, Tuple<string, ushort, string, ushort>> conSpeakerAs_ListnerAs = new Dictionary<int, Tuple<string, ushort, string, ushort>>();
+        public static DataTable data = new DataTable();
+        public static Dictionary<int, Tuple<int, string, int, string, int, int, string, Tuple<string>>> Adj_RIB_Out = new Dictionary<int, Tuple<int, string, int, string, int, int, string, Tuple<string>>>();
+        public static Dictionary<int, Tuple<int, string>> NLRI = new Dictionary<int, Tuple<int, string>>();
+        public static Dictionary<int, Tuple<int, string,int, ushort>> pathAttribute = new Dictionary<int, Tuple<int, string, int, ushort>>();
+        public static string withdrawl_IP_Address;
+        public static int withdrawl_Length;
+        public static Dictionary<int, Tuple<string, int>> withdrawnRoutes = new Dictionary<int, Tuple <string, int>>();
+        public static Dictionary<int, Tuple<int, string>> pathSegment = new Dictionary<int, Tuple<int, string>>();
+        public static Dictionary<int, string> interASConIP = new Dictionary<int, string>();
+
 ```
 
 Figure 42: Global dictionary declaration in global variable class
