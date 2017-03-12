@@ -17,18 +17,48 @@ This was my first network programming experience and it was challenging task for
 
 I started the implementation of the project from abstract BGP message structure class where, I have used byte array to store the data stream of packet. All the four different BGP message classes inherits this class. The actual implementation and its complication will be discussed in the upcoming section of this document. As the second part of the implementation I have used state machine class to initialize BGP session attributes, timer events, TCP connection events and BGP message events. FSM class inherits state machine where it uses all of these attributes and events to handle individual session and events for each routers within the AS. Router class is used to define the speaker and listener sockets to work as a single router with single IP address. BGP speaker and BGP listener inherits the router to create speaker and listener sockets. To address the project requirements where, the simulation must contain 10 routers in mesh topology with AS’s implementations. I have implemented InitilizeBGPSpeakerListner class. When BGP speakers and listeners sockets initialization is complete and they are online FSM updates their connection status to be in idle state. Then BGP speaker initiates TCP connection to the listener and sends the open message to listeners and then FSM changes its connection state to active. When BGP listener receives the open message it sends open conformation message and keep alive message to the BGP speakers. When speaker receives the open message it sets the FSM connection state to open conformed and after receiving keep alive message speaker sets the connection state to established state. For all those connection which are in established state BGP speaker initiates the local policy and decision process to create the routes for the AS’s, this part of the implemented can be found in routes class. When the routing table of the local AS’s is ready then BGP speaker uses the UpdateMessageHandling class to advertise the routing information in the internal AS system. In this simulation project I have used 10 asynchronous listener sockets and 14 asynchronous speaker sockets with individual BGP session attributes, timer events, TCP connection events and BGP message events which are handled by FSM. Which requires a large amount of the data to be stored and accessed during the run time from multiple threads. To address this particular need I have used a static global variables class. As all the data communicated between the routers in this implementation are in byte stream. To print those data in human readable format in console window all the messages are passed through packet handler. Implementation of help information, execution of control methods and initiation of routers is done through program class. It is the main entry point for the execution of the software and the communication between the routers is triggered from this class with the help of automatic start event of FSM class. In the following class diagram we can see the classes and the detailed explanation of each class will be discussed in the upcoming section of this document.
 
+![img](https://github.com/dinesh2043/BGP-Simulation-/blob/master/img1.jpg)
  
 Figure 1: Class Diagram of the project
 
 ### BGP Messages
 Message Structure class implements message header and different message specific data handling. BGP message header consists message marker, message type and message length. All the process of writing data for different BGP messages format is done in this class. In the following code snippet we can see the implementation for storing message marker, message type and message length in temporary buffer byte array to use as data stream. This stream of the data is stored in the buffer and this buffer is used while sending the actual message packet. 
 
-
-
-
-
-
-
+```
+	private byte[] _buffer;
+ 	public ulong marker;
+        public MessageStructure(ulong marker, uint length)
+        {
+            _buffer = new byte[marker];
+            for (int i = 0; i < 16; i++)
+            {
+                writeMarker(marker,i*2);
+            }
+            writeLength(length,32);
+        }
+        public void writeMarker(ulong value, int offset)
+        {
+            byte[] tempBuf = new byte[32];
+           
+            tempBuf = BitConverter.GetBytes(1);
+            Buffer.BlockCopy(tempBuf, 0, _buffer, offset,2);
+	}
+	        public void writeLength(uint value, int offset)
+        {
+            byte[] tempBuf = new byte[6];
+            tempBuf = BitConverter.GetBytes(value);
+            Buffer.BlockCopy(tempBuf, 0, _buffer, offset, 2);
+          }
+        public void writeType(ushort value, int offset)
+        {
+            byte[] tempBuf = new byte[2];
+            tempBuf = BitConverter.GetBytes(value);
+            Buffer.BlockCopy(tempBuf, 0, _buffer, offset, 2);
+        }
+	//complete message is stored in BGPmessage Buffer
+        public byte[] BGPmessage { get { return _buffer; } }
+	
+```
 
 Figure 2: Writing the message marker, length and type in the temporary buffer byte array
 
