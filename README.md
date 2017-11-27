@@ -1,4 +1,4 @@
-# BGP-Simulation-
+# BGP-Simulation
 ## C# project with async sockets and 10 routers
 
 ### Introduction
